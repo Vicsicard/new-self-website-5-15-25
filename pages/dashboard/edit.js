@@ -24,10 +24,18 @@ export default function EditContent() {
   // Fetch project data
   useEffect(() => {
     async function fetchProject() {
-      if (!user?.projectId) return;
-      
       try {
-        const res = await fetch('/api/projects');
+        // Get project ID from URL query or from user's assigned project
+        const projectId = router.query.id || user?.projectId;
+        
+        if (!projectId) {
+          setError('No project ID specified');
+          setLoading(false);
+          return;
+        }
+        
+        // Fetch the specific project by ID
+        const res = await fetch(`/api/projects/${projectId}`);
         
         if (!res.ok) {
           throw new Error('Failed to fetch project');
@@ -70,32 +78,41 @@ export default function EditContent() {
     setError('');
 
     try {
+      // Get project ID from URL query, current project, or user's assigned project
+      const projectId = router.query.id || project?.projectId || user?.projectId;
+      
+      if (!projectId) {
+        throw new Error('No project ID available');
+      }
+      
       // Convert form data back to content array
-      const contentArray = Object.keys(formData).map(key => ({
-        key,
-        value: formData[key]
-      }));
-
+      const content = Object.entries(formData).map(([key, value]) => ({ key, value }));
+      
       // Send update to API
-      const res = await fetch(`/api/projects/${user.projectId}/content`, {
+      const res = await fetch(`/api/projects/${projectId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ content: contentArray }),
+        body: JSON.stringify({ content }),
       });
 
       if (!res.ok) {
-        throw new Error('Failed to save content');
+        throw new Error('Failed to update project');
       }
 
       setSaveSuccess(true);
+      
+      // Add a small delay to show success message
       setTimeout(() => {
-        setSaveSuccess(false);
-      }, 3000);
+        // If admin user, redirect back to dashboard after save
+        if (user?.role === 'admin') {
+          router.push('/dashboard');
+        }
+      }, 1500);
     } catch (err) {
-      console.error('Error saving content:', err);
-      setError('Failed to save content. Please try again.');
+      console.error('Error updating project:', err);
+      setError('Failed to save changes. Please try again.');
     } finally {
       setSaving(false);
     }
