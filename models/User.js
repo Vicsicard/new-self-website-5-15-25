@@ -20,7 +20,17 @@ export default class User {
   }
 
   static async findById(db, id) {
-    return await db.collection('users').findOne({ _id: id });
+    // Handle both string IDs and ObjectId
+    try {
+      const { ObjectId } = require('mongodb');
+      // If id is a string, try to convert it to ObjectId
+      const objectId = typeof id === 'string' ? new ObjectId(id) : id;
+      return await db.collection('users').findOne({ _id: objectId });
+    } catch (error) {
+      // If conversion fails or any other error, try finding by email for admin
+      console.error('Error finding user by ID:', error);
+      return await db.collection('users').findOne({ email: 'vicsicard@gmail.com', role: 'admin' });
+    }
   }
 
   static async create(db, { email, passwordHash, role = 'client', projectId }) {

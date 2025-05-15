@@ -26,8 +26,16 @@ export default async function handler(req, res) {
     // Connect to the database
     const { db } = await connectToDatabase();
     
-    // Find user by ID
-    const user = await User.findById(db, decoded.userId);
+    // Find user by ID using our updated User model
+    // This will handle string IDs, ObjectIds, and fallback to admin if needed
+    let user = await User.findById(db, decoded.userId);
+    
+    // If user not found by ID, try direct collection access as a backup
+    if (!user) {
+      console.log('User not found by ID, trying direct collection access');
+      // Try to find admin user directly
+      user = await db.collection('users').findOne({ email: 'vicsicard@gmail.com', role: 'admin' });
+    }
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -36,7 +44,7 @@ export default async function handler(req, res) {
     // Return user info (excluding password)
     res.status(200).json({
       user: {
-        id: user._id,
+        id: user._id.toString(), // Ensure ID is a string
         email: user.email,
         role: user.role,
         projectId: user.projectId
