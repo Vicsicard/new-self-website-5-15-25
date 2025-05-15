@@ -1,0 +1,25 @@
+services:
+  # A web service for the Next.js application
+  - type: web
+    name: selfcast-platform
+    env: node
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        fromDatabase:
+          name: selfcast-mongodb
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+    plan: starter
+    # Automatic branch deploys for the main branch
+    autoDeploy: true
+
+databases:
+  # MongoDB instance
+  - name: selfcast-mongodb
+    plan: free
+    type: mongodb
