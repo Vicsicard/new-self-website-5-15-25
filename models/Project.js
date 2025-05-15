@@ -26,6 +26,10 @@ export default class Project {
     return await db.collection('projects').findOne({ _id: id });
   }
   
+  static async listAll(db) {
+    return await db.collection('projects').find({}).sort({ updatedAt: -1 }).toArray();
+  }
+  
   static async create(db, { projectId, name, content = [] }) {
     const now = new Date();
     
