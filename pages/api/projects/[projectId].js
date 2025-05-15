@@ -32,6 +32,8 @@ async function handler(req, res) {
   // PUT /api/projects/[projectId] - Update a project
   if (method === 'PUT') {
     try {
+      console.log(`Updating project ${projectId}`, req.body);
+      
       // Find project by ID
       const project = await Project.findByProjectId(db, projectId);
       
@@ -46,8 +48,48 @@ async function handler(req, res) {
       
       const { name, content } = req.body;
       
+      // Validate content array
+      if (content && !Array.isArray(content)) {
+        return res.status(400).json({ message: 'Content must be an array' });
+      }
+      
+      // Prepare update data
+      const updateData = {};
+      if (name) updateData.name = name;
+      
+      // Only update content if it's provided and valid
+      if (content && Array.isArray(content)) {
+        // Filter out invalid content items
+        const validContent = content.filter(item => 
+          item && typeof item === 'object' && item.key && item.key.trim() !== ''
+        );
+        
+        // Merge with existing content to preserve fields not in the update
+        const existingContentMap = {};
+        if (project.content && Array.isArray(project.content)) {
+          project.content.forEach(item => {
+            if (item && item.key) {
+              existingContentMap[item.key] = item.value;
+            }
+          });
+        }
+        
+        // Update existing values with new ones
+        validContent.forEach(item => {
+          existingContentMap[item.key] = item.value;
+        });
+        
+        // Convert back to array format
+        updateData.content = Object.entries(existingContentMap).map(([key, value]) => ({
+          key,
+          value: value || ''
+        }));
+      }
+      
+      console.log('Final update data:', updateData);
+      
       // Update the project
-      await Project.update(db, projectId, { name, content });
+      await Project.update(db, projectId, updateData);
       
       // Get the updated project
       const updatedProject = await Project.findByProjectId(db, projectId);

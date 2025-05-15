@@ -34,6 +34,8 @@ export default function EditContent() {
           return;
         }
         
+        console.log('Fetching project with ID:', projectId);
+        
         // Fetch the specific project by ID
         const res = await fetch(`/api/projects/${projectId}`);
         
@@ -42,14 +44,20 @@ export default function EditContent() {
         }
         
         const data = await res.json();
+        console.log('Project data received:', data.project);
         setProject(data.project);
         
         // Convert content array to form data object for easier editing
         const initialFormData = {};
-        data.project.content.forEach(item => {
-          initialFormData[item.key] = item.value;
-        });
+        if (data.project.content && Array.isArray(data.project.content)) {
+          data.project.content.forEach(item => {
+            if (item && item.key) {
+              initialFormData[item.key] = item.value || '';
+            }
+          });
+        }
         
+        console.log('Initial form data:', initialFormData);
         setFormData(initialFormData);
       } catch (err) {
         console.error('Error fetching project:', err);
@@ -85,8 +93,18 @@ export default function EditContent() {
         throw new Error('No project ID available');
       }
       
+      console.log('Saving project with ID:', projectId);
+      console.log('Form data to save:', formData);
+      
       // Convert form data back to content array
-      const content = Object.entries(formData).map(([key, value]) => ({ key, value }));
+      const content = Object.entries(formData)
+        .filter(([key, value]) => key && key.trim() !== '') // Filter out empty keys
+        .map(([key, value]) => ({ 
+          key, 
+          value: value || '' // Ensure value is never undefined
+        }));
+      
+      console.log('Content array to save:', content);
       
       // Send update to API
       const res = await fetch(`/api/projects/${projectId}`, {
@@ -98,9 +116,14 @@ export default function EditContent() {
       });
 
       if (!res.ok) {
-        throw new Error('Failed to update project');
+        const errorData = await res.json().catch(() => ({}));
+        console.error('Server error response:', errorData);
+        throw new Error(`Failed to update project: ${errorData.message || res.statusText}`);
       }
 
+      const responseData = await res.json();
+      console.log('Save response:', responseData);
+      
       setSaveSuccess(true);
       
       // Add a small delay to show success message
@@ -109,10 +132,10 @@ export default function EditContent() {
         if (user?.role === 'admin') {
           router.push('/dashboard');
         }
-      }, 1500);
+      }, 2000);
     } catch (err) {
       console.error('Error updating project:', err);
-      setError('Failed to save changes. Please try again.');
+      setError(`Failed to save changes: ${err.message}`);
     } finally {
       setSaving(false);
     }
@@ -120,8 +143,42 @@ export default function EditContent() {
 
   // Group content fields by section
   const renderContentFields = () => {
-    // Define content sections based on PRD
-    const sections = {
+    // Get all available keys from the form data
+    const availableKeys = Object.keys(formData);
+    console.log('Available form data keys:', availableKeys);
+    
+    // Create dynamic sections based on available keys
+    const dynamicSections = {};
+    
+    // Helper function to categorize keys
+    const categorizeKey = (key) => {
+      if (key.includes('title') || key.includes('subtitle') || key.includes('bio') || 
+          key.includes('name') || key.includes('slogan') || key.includes('profile')) {
+        return 'Basic Site Content';
+      } else if (key.includes('color') || key.includes('font') || key.includes('banner') || 
+                key.includes('background') || key.includes('image_url')) {
+        return 'Design Elements';
+      } else if (key.includes('facebook') || key.includes('instagram') || 
+                key.includes('twitter') || key.includes('linkedin')) {
+        return 'Social Media Content';
+      } else {
+        return 'Other Content';
+      }
+    };
+    
+    // Categorize all available keys
+    availableKeys.forEach(key => {
+      const category = categorizeKey(key);
+      if (!dynamicSections[category]) {
+        dynamicSections[category] = [];
+      }
+      dynamicSections[category].push(key);
+    });
+    
+    console.log('Dynamic sections:', dynamicSections);
+    
+    // Define fallback sections if no keys are found
+    const sections = Object.keys(dynamicSections).length > 0 ? dynamicSections : {
       'Basic Site Content': [
         'rendered_title', 'rendered_subtitle', 'rendered_bio_html', 
         'client_name', 'client_website', 'rendered_footer_slogan', 'profile_image_url'
