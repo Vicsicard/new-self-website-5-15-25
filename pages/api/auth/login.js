@@ -1,6 +1,6 @@
 import { connectToDatabase } from '../../../lib/db';
 import User from '../../../models/User';
-import { verifyPassword, generateToken, setTokenCookie } from '../../../utils/auth';
+import { generateToken, setTokenCookie } from '../../../utils/auth';
 
 export default async function handler(req, res) {
   // Only allow POST method for login
@@ -9,11 +9,11 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { email, password } = req.body;
+    const { email } = req.body;
 
     // Validate input
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required' });
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
     }
 
     // Connect to the database
@@ -24,15 +24,10 @@ export default async function handler(req, res) {
     
     // Check if user exists
     if (!user) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      return res.status(401).json({ message: 'Email not found. Please contact the administrator.' });
     }
     
-    // Verify password
-    const isPasswordValid = await verifyPassword(password, user.passwordHash);
-    
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Invalid email or password' });
-    }
+    // Skip password verification - email-only authentication
     
     // Generate JWT token
     const token = generateToken(user);

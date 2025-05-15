@@ -5,7 +5,6 @@ import { AuthContext } from './_app';
 
 export default function Login() {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -24,7 +23,7 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const result = await login(email, password);
+      const result = await login(email);
       
       if (result.success) {
         router.push('/dashboard');
@@ -81,23 +80,7 @@ export default function Login() {
               </div>
             </div>
 
-            <div>
-              <label htmlFor="password" className="form-label">
-                Password
-              </label>
-              <div className="mt-1">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  className="form-input"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-            </div>
+
 
             <div>
               <button
