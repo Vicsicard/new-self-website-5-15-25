@@ -1,4 +1,7 @@
-// Script to initialize the admin user in the database
+// Script to initialize the admin user in the application database
+// NOTE: This creates an APPLICATION USER, not a MongoDB Atlas database user
+// MongoDB Atlas database users (for connection) are created in the Atlas dashboard
+// and have username restrictions (no @ symbols allowed)
 require('dotenv').config();
 const { MongoClient } = require('mongodb');
 
