@@ -1,6 +1,7 @@
 import '../styles/globals.css';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { startKeepAlive } from '../utils/keepAlive';
 
 // Auth context for user state management
 export const AuthContext = React.createContext();
@@ -30,6 +31,15 @@ function MyApp({ Component, pageProps }) {
     }
 
     loadUserFromAPI();
+  }, []);
+  
+  // Keep-alive mechanism to prevent Render from spinning down
+  useEffect(() => {
+    // Start the keep-alive service and get the cleanup function
+    const stopKeepAlive = startKeepAlive();
+    
+    // Clean up on component unmount
+    return () => stopKeepAlive();
   }, []);
 
   // Login function
