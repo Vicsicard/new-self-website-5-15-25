@@ -361,88 +361,80 @@ export default function ClientSite({ projectData, notFound }) {
       border: 1px solid rgba(255,255,255,0.8);
     }
     .blog-card:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+      transform: translateY(-10px);
+      box-shadow: 0 20px 35px rgba(0,0,0,0.1);
     }
     .blog-image {
       width: 100%;
-      height: 220px;
+      height: 200px;
       object-fit: cover;
-      border-bottom: 3px solid var(--accent-color);
     }
     .blog-content {
-      padding: 2rem;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
+      padding: 1.5rem;
     }
-    .blog-card h3 {
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
-      color: #000;
+    .blog-content h3 {
+      font-size: 1.75rem;
       line-height: 1.3;
+      margin-bottom: 1rem;
+      color: var(--primary-color);
+      font-weight: 700;
     }
     .blog-excerpt {
-      color: #333;
-      font-style: italic;
-      margin-bottom: 1.5rem;
-      font-size: 1rem;
-      line-height: 1.7;
-      flex: 1;
+      color: #666;
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
     }
     .read-more-btn {
       display: inline-block;
-      padding: 0.75rem 1.5rem;
       background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
       color: white;
-      font-weight: 600;
+      border: none;
+      padding: 0.75rem 1.5rem;
       border-radius: 50px;
-      text-align: center;
-      transition: all 0.3s ease;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-speed) ease;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      align-self: flex-start;
-      margin-top: auto;
+      margin-top: 0.5rem;
     }
     .read-more-btn:hover {
-      transform: translateY(-3px);
+      background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+      transform: translateY(-2px);
       box-shadow: 0 6px 15px rgba(0,0,0,0.15);
     }
-    
-    /* Modal Styles */
-    .blog-modal-overlay {
+    .modal-overlay {
       position: fixed;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.7);
-      backdrop-filter: blur(5px);
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0,0,0,0.8);
       display: flex;
       justify-content: center;
       align-items: center;
-      z-index: 9999;
+      z-index: 1000;
       opacity: 0;
       visibility: hidden;
       transition: all 0.3s ease;
     }
-    .blog-modal-overlay.active {
+    .modal-overlay.active {
       opacity: 1;
       visibility: visible;
     }
-    .blog-modal {
-      background: white;
+    .content-modal {
+      background-color: white;
       width: 90%;
-      max-width: 900px;
+      max-width: 800px;
       max-height: 90vh;
-      border-radius: 16px;
-      overflow-y: auto;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-      transform: translateY(30px);
-      opacity: 0;
-      transition: all 0.4s ease;
+      border-radius: 12px;
+      overflow: hidden;
       position: relative;
+      transform: translateY(20px);
+      opacity: 0;
+      transition: all 0.3s ease;
     }
-    .blog-modal.active {
+    .content-modal.active {
       transform: translateY(0);
       opacity: 1;
     }
@@ -703,23 +695,67 @@ export default function ClientSite({ projectData, notFound }) {
       overflow: hidden;
       box-shadow: 0 5px 15px rgba(0,0,0,0.05);
       transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      position: relative;
+      border-top: 4px solid;
+    }
+    .social-post.facebook-post {
+      border-color: #1877F2;
+    }
+    .social-post.twitter-post {
+      border-color: #1DA1F2;
+    }
+    .social-post.instagram-post {
+      border-color: #C13584;
+    }
+    .social-post.linkedin-post {
+      border-color: #0A66C2;
     }
     .social-post:hover {
       transform: translateY(-5px);
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     }
-    .social-post-image {
-      width: 100%;
-      height: 200px;
-      object-fit: cover;
+    .post-platform-icon {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem 0;
+      font-size: 2rem;
+      background-color: rgba(240, 240, 240, 0.5);
+    }
+    .facebook-post .post-platform-icon {
+      color: #1877F2;
+    }
+    .twitter-post .post-platform-icon {
+      color: #1DA1F2;
+    }
+    .instagram-post .post-platform-icon {
+      color: #C13584;
+    }
+    .linkedin-post .post-platform-icon {
+      color: #0A66C2;
     }
     .social-post-content {
       padding: 1.5rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
     }
     .social-post-title {
-      font-weight: 600;
-      margin-bottom: 0.75rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 1rem;
       color: var(--primary-color);
+    }
+    .social-post-excerpt {
+      color: #666;
+      font-size: 0.95rem;
+      margin-bottom: 1rem;
+      line-height: 1.6;
     }
     .social-post-text {
       color: var(--text-color);
@@ -863,21 +899,44 @@ export default function ClientSite({ projectData, notFound }) {
       observer.observe(el);
     });
     
-    // Modal functionality for blog posts
-    const modalOverlay = document.getElementById('blog-modal-overlay');
-    const modal = document.getElementById('blog-modal');
+    // Modal functionality for blog and social media posts
+    const modalOverlay = document.getElementById('content-modal-overlay');
+    const modal = document.getElementById('content-modal');
     const modalTitle = document.getElementById('modal-title');
     const modalBody = document.getElementById('modal-body');
     const modalClose = document.getElementById('modal-close');
     const readMoreButtons = document.querySelectorAll('.read-more-btn');
     
-    // Function to open modal with blog post content
-    const openModal = (blogId) => {
+    // Function to open modal with post content
+    const openModal = (postId, platform = 'blog') => {
       if (!modalOverlay || !modal) return;
       
-      // Get blog content based on ID
-      const title = getContentValue(`blog_${blogId}_title`, '');
-      const content = getContentValue(`blog_${blogId}`, '');
+      // Get content based on platform and ID
+      let title, content;
+      
+      switch (platform) {
+        case 'facebook':
+          title = getContentValue(`facebook_title_${postId}`, '');
+          content = getContentValue(`facebook_post_${postId}`, '');
+          break;
+        case 'twitter':
+          title = getContentValue(`twitter_title_${postId}`, '');
+          content = getContentValue(`twitter_post_${postId}`, '');
+          break;
+        case 'instagram':
+          title = getContentValue(`instagram_title_${postId}`, '');
+          content = getContentValue(`instagram_post_${postId}`, '');
+          break;
+        case 'linkedin':
+          title = getContentValue(`linkedin_title_${postId}`, '');
+          content = getContentValue(`linkedin_post_${postId}`, '');
+          break;
+        case 'blog':
+        default:
+          title = getContentValue(`blog_${postId}_title`, '');
+          content = getContentValue(`blog_${postId}`, '');
+          break;
+      }
       
       // Set modal content
       if (modalTitle) modalTitle.textContent = title;
@@ -923,8 +982,9 @@ export default function ClientSite({ projectData, notFound }) {
     if (readMoreButtons) {
       readMoreButtons.forEach(button => {
         button.addEventListener('click', () => {
-          const blogId = button.getAttribute('data-blog-id');
-          if (blogId) openModal(blogId);
+          const platform = button.getAttribute('data-platform') || 'blog';
+          const postId = button.getAttribute('data-post-id') || button.getAttribute('data-blog-id');
+          if (postId) openModal(postId, platform);
         });
       });
     }
@@ -1138,9 +1198,9 @@ export default function ClientSite({ projectData, notFound }) {
                   )}
                 </div>
                 
-                {/* Blog Post Modals */}
-                <div className="blog-modal-overlay" id="blog-modal-overlay">
-                  <div className="blog-modal" id="blog-modal">
+                {/* Content Modals - For Blog and Social Media Posts */}
+                <div className="modal-overlay" id="content-modal-overlay">
+                  <div className="content-modal" id="content-modal">
                     <div className="modal-close" id="modal-close">×</div>
                     <div className="modal-content">
                       <h2 className="modal-title" id="modal-title"></h2>
@@ -1196,15 +1256,15 @@ export default function ClientSite({ projectData, notFound }) {
                   {/* Facebook Post 1 */}
                   {getContentValue('facebook_title_1') && (
                     <div className="social-post facebook-post lazy-load">
-                      <img 
-                        src={getContentValue('facebook_image_1_url', 'https://via.placeholder.com/600x400?text=Facebook+Post+1')} 
-                        alt="Facebook post" 
-                        className="social-post-image"
-                        loading="lazy"
-                      />
+                      <div className="post-platform-icon">
+                        <FaFacebook aria-hidden="true" />
+                      </div>
                       <div className="social-post-content">
                         <h4 className="social-post-title">{getContentValue('facebook_title_1', 'Facebook Post Title')}</h4>
-                        <p className="social-post-text">{getContentValue('facebook_content_1', 'Facebook post content will appear here.')}</p>
+                        <p className="social-post-excerpt">
+                          {getContentValue('facebook_excerpt_1') || getContentValue('facebook_post_1').substring(0, 120) + '...'}
+                        </p>
+                        <button className="read-more-btn" data-platform="facebook" data-post-id="1">Read More</button>
                       </div>
                     </div>
                   )}
@@ -1212,15 +1272,15 @@ export default function ClientSite({ projectData, notFound }) {
                   {/* Facebook Post 2 */}
                   {getContentValue('facebook_title_2') && (
                     <div className="social-post facebook-post lazy-load">
-                      <img 
-                        src={getContentValue('facebook_image_2_url', 'https://via.placeholder.com/600x400?text=Facebook+Post+2')} 
-                        alt="Facebook post" 
-                        className="social-post-image"
-                        loading="lazy"
-                      />
+                      <div className="post-platform-icon">
+                        <FaFacebook aria-hidden="true" />
+                      </div>
                       <div className="social-post-content">
                         <h4 className="social-post-title">{getContentValue('facebook_title_2', 'Facebook Post Title')}</h4>
-                        <p className="social-post-text">{getContentValue('facebook_content_2', 'Facebook post content will appear here.')}</p>
+                        <p className="social-post-excerpt">
+                          {getContentValue('facebook_excerpt_2') || getContentValue('facebook_post_2').substring(0, 120) + '...'}
+                        </p>
+                        <button className="read-more-btn" data-platform="facebook" data-post-id="2">Read More</button>
                       </div>
                     </div>
                   )}
@@ -1228,15 +1288,15 @@ export default function ClientSite({ projectData, notFound }) {
                   {/* Facebook Post 3 */}
                   {getContentValue('facebook_title_3') && (
                     <div className="social-post facebook-post lazy-load">
-                      <img 
-                        src={getContentValue('facebook_image_3_url', 'https://via.placeholder.com/600x400?text=Facebook+Post+3')} 
-                        alt="Facebook post" 
-                        className="social-post-image"
-                        loading="lazy"
-                      />
+                      <div className="post-platform-icon">
+                        <FaFacebook aria-hidden="true" />
+                      </div>
                       <div className="social-post-content">
                         <h4 className="social-post-title">{getContentValue('facebook_title_3', 'Facebook Post Title')}</h4>
-                        <p className="social-post-text">{getContentValue('facebook_content_3', 'Facebook post content will appear here.')}</p>
+                        <p className="social-post-excerpt">
+                          {getContentValue('facebook_excerpt_3') || getContentValue('facebook_post_3').substring(0, 120) + '...'}
+                        </p>
+                        <button className="read-more-btn" data-platform="facebook" data-post-id="3">Read More</button>
                       </div>
                     </div>
                   )}
@@ -1244,15 +1304,15 @@ export default function ClientSite({ projectData, notFound }) {
                   {/* Facebook Post 4 */}
                   {getContentValue('facebook_title_4') && (
                     <div className="social-post facebook-post lazy-load">
-                      <img 
-                        src={getContentValue('facebook_image_4_url', 'https://via.placeholder.com/600x400?text=Facebook+Post+4')} 
-                        alt="Facebook post" 
-                        className="social-post-image"
-                        loading="lazy"
-                      />
+                      <div className="post-platform-icon">
+                        <FaFacebook aria-hidden="true" />
+                      </div>
                       <div className="social-post-content">
                         <h4 className="social-post-title">{getContentValue('facebook_title_4', 'Facebook Post Title')}</h4>
-                        <p className="social-post-text">{getContentValue('facebook_content_4', 'Facebook post content will appear here.')}</p>
+                        <p className="social-post-excerpt">
+                          {getContentValue('facebook_excerpt_4') || getContentValue('facebook_post_4').substring(0, 120) + '...'}
+                        </p>
+                        <button className="read-more-btn" data-platform="facebook" data-post-id="4">Read More</button>
                       </div>
                     </div>
                   )}
@@ -1281,15 +1341,15 @@ export default function ClientSite({ projectData, notFound }) {
                   {/* Twitter Post 1 */}
                   {getContentValue('twitter_title_1') && (
                     <div className="social-post twitter-post lazy-load">
-                      <img 
-                        src={getContentValue('twitter_image_1_url', 'https://via.placeholder.com/600x400?text=Twitter+Post+1')} 
-                        alt="Twitter post" 
-                        className="social-post-image"
-                        loading="lazy"
-                      />
+                      <div className="post-platform-icon">
+                        <FaTwitter aria-hidden="true" />
+                      </div>
                       <div className="social-post-content">
                         <h4 className="social-post-title">{getContentValue('twitter_title_1', 'Twitter Post Title')}</h4>
-                        <p className="social-post-text">{getContentValue('twitter_content_1', 'Twitter post content will appear here.')}</p>
+                        <p className="social-post-excerpt">
+                          {getContentValue('twitter_excerpt_1') || getContentValue('twitter_post_1').substring(0, 120) + '...'}
+                        </p>
+                        <button className="read-more-btn" data-platform="twitter" data-post-id="1">Read More</button>
                       </div>
                     </div>
                   )}
@@ -1297,15 +1357,15 @@ export default function ClientSite({ projectData, notFound }) {
                   {/* Twitter Post 2 */}
                   {getContentValue('twitter_title_2') && (
                     <div className="social-post twitter-post lazy-load">
-                      <img 
-                        src={getContentValue('twitter_image_2_url', 'https://via.placeholder.com/600x400?text=Twitter+Post+2')} 
-                        alt="Twitter post" 
-                        className="social-post-image"
-                        loading="lazy"
-                      />
+                      <div className="post-platform-icon">
+                        <FaTwitter aria-hidden="true" />
+                      </div>
                       <div className="social-post-content">
                         <h4 className="social-post-title">{getContentValue('twitter_title_2', 'Twitter Post Title')}</h4>
-                        <p className="social-post-text">{getContentValue('twitter_content_2', 'Twitter post content will appear here.')}</p>
+                        <p className="social-post-excerpt">
+                          {getContentValue('twitter_excerpt_2') || getContentValue('twitter_post_2').substring(0, 120) + '...'}
+                        </p>
+                        <button className="read-more-btn" data-platform="twitter" data-post-id="2">Read More</button>
                       </div>
                     </div>
                   )}
@@ -1313,15 +1373,15 @@ export default function ClientSite({ projectData, notFound }) {
                   {/* Twitter Post 3 */}
                   {getContentValue('twitter_title_3') && (
                     <div className="social-post twitter-post lazy-load">
-                      <img 
-                        src={getContentValue('twitter_image_3_url', 'https://via.placeholder.com/600x400?text=Twitter+Post+3')} 
-                        alt="Twitter post" 
-                        className="social-post-image"
-                        loading="lazy"
-                      />
+                      <div className="post-platform-icon">
+                        <FaTwitter aria-hidden="true" />
+                      </div>
                       <div className="social-post-content">
                         <h4 className="social-post-title">{getContentValue('twitter_title_3', 'Twitter Post Title')}</h4>
-                        <p className="social-post-text">{getContentValue('twitter_content_3', 'Twitter post content will appear here.')}</p>
+                        <p className="social-post-excerpt">
+                          {getContentValue('twitter_excerpt_3') || getContentValue('twitter_post_3').substring(0, 120) + '...'}
+                        </p>
+                        <button className="read-more-btn" data-platform="twitter" data-post-id="3">Read More</button>
                       </div>
                     </div>
                   )}
@@ -1329,15 +1389,15 @@ export default function ClientSite({ projectData, notFound }) {
                   {/* Twitter Post 4 */}
                   {getContentValue('twitter_title_4') && (
                     <div className="social-post twitter-post lazy-load">
-                      <img 
-                        src={getContentValue('twitter_image_4_url', 'https://via.placeholder.com/600x400?text=Twitter+Post+4')} 
-                        alt="Twitter post" 
-                        className="social-post-image"
-                        loading="lazy"
-                      />
+                      <div className="post-platform-icon">
+                        <FaTwitter aria-hidden="true" />
+                      </div>
                       <div className="social-post-content">
                         <h4 className="social-post-title">{getContentValue('twitter_title_4', 'Twitter Post Title')}</h4>
-                        <p className="social-post-text">{getContentValue('twitter_content_4', 'Twitter post content will appear here.')}</p>
+                        <p className="social-post-excerpt">
+                          {getContentValue('twitter_excerpt_4') || getContentValue('twitter_post_4').substring(0, 120) + '...'}
+                        </p>
+                        <button className="read-more-btn" data-platform="twitter" data-post-id="4">Read More</button>
                       </div>
                     </div>
                   )}
@@ -1377,15 +1437,15 @@ export default function ClientSite({ projectData, notFound }) {
                   {/* Instagram Post 1 */}
                   {getContentValue('instagram_title_1') && (
                     <div className="social-post instagram-post lazy-load">
-                      <img 
-                        src={getContentValue('instagram_image_1_url', 'https://via.placeholder.com/600x400?text=Instagram+Post+1')} 
-                        alt="Instagram post" 
-                        className="social-post-image"
-                        loading="lazy"
-                      />
+                      <div className="post-platform-icon">
+                        <FaInstagram aria-hidden="true" />
+                      </div>
                       <div className="social-post-content">
                         <h4 className="social-post-title">{getContentValue('instagram_title_1', 'Instagram Post Title')}</h4>
-                        <p className="social-post-text">{getContentValue('instagram_content_1', 'Instagram post content will appear here.')}</p>
+                        <p className="social-post-excerpt">
+                          {getContentValue('instagram_excerpt_1') || getContentValue('instagram_post_1').substring(0, 120) + '...'}
+                        </p>
+                        <button className="read-more-btn" data-platform="instagram" data-post-id="1">Read More</button>
                       </div>
                     </div>
                   )}
@@ -1393,15 +1453,15 @@ export default function ClientSite({ projectData, notFound }) {
                   {/* Instagram Post 2 */}
                   {getContentValue('instagram_title_2') && (
                     <div className="social-post instagram-post lazy-load">
-                      <img 
-                        src={getContentValue('instagram_image_2_url', 'https://via.placeholder.com/600x400?text=Instagram+Post+2')} 
-                        alt="Instagram post" 
-                        className="social-post-image"
-                        loading="lazy"
-                      />
+                      <div className="post-platform-icon">
+                        <FaInstagram aria-hidden="true" />
+                      </div>
                       <div className="social-post-content">
                         <h4 className="social-post-title">{getContentValue('instagram_title_2', 'Instagram Post Title')}</h4>
-                        <p className="social-post-text">{getContentValue('instagram_content_2', 'Instagram post content will appear here.')}</p>
+                        <p className="social-post-excerpt">
+                          {getContentValue('instagram_excerpt_2') || getContentValue('instagram_post_2').substring(0, 120) + '...'}
+                        </p>
+                        <button className="read-more-btn" data-platform="instagram" data-post-id="2">Read More</button>
                       </div>
                     </div>
                   )}
@@ -1409,15 +1469,15 @@ export default function ClientSite({ projectData, notFound }) {
                   {/* Instagram Post 3 */}
                   {getContentValue('instagram_title_3') && (
                     <div className="social-post instagram-post lazy-load">
-                      <img 
-                        src={getContentValue('instagram_image_3_url', 'https://via.placeholder.com/600x400?text=Instagram+Post+3')} 
-                        alt="Instagram post" 
-                        className="social-post-image"
-                        loading="lazy"
-                      />
+                      <div className="post-platform-icon">
+                        <FaInstagram aria-hidden="true" />
+                      </div>
                       <div className="social-post-content">
                         <h4 className="social-post-title">{getContentValue('instagram_title_3', 'Instagram Post Title')}</h4>
-                        <p className="social-post-text">{getContentValue('instagram_content_3', 'Instagram post content will appear here.')}</p>
+                        <p className="social-post-excerpt">
+                          {getContentValue('instagram_excerpt_3') || getContentValue('instagram_post_3').substring(0, 120) + '...'}
+                        </p>
+                        <button className="read-more-btn" data-platform="instagram" data-post-id="3">Read More</button>
                       </div>
                     </div>
                   )}
@@ -1425,15 +1485,15 @@ export default function ClientSite({ projectData, notFound }) {
                   {/* Instagram Post 4 */}
                   {getContentValue('instagram_title_4') && (
                     <div className="social-post instagram-post lazy-load">
-                      <img 
-                        src={getContentValue('instagram_image_4_url', 'https://via.placeholder.com/600x400?text=Instagram+Post+4')} 
-                        alt="Instagram post" 
-                        className="social-post-image"
-                        loading="lazy"
-                      />
+                      <div className="post-platform-icon">
+                        <FaInstagram aria-hidden="true" />
+                      </div>
                       <div className="social-post-content">
                         <h4 className="social-post-title">{getContentValue('instagram_title_4', 'Instagram Post Title')}</h4>
-                        <p className="social-post-text">{getContentValue('instagram_content_4', 'Instagram post content will appear here.')}</p>
+                        <p className="social-post-excerpt">
+                          {getContentValue('instagram_excerpt_4') || getContentValue('instagram_post_4').substring(0, 120) + '...'}
+                        </p>
+                        <button className="read-more-btn" data-platform="instagram" data-post-id="4">Read More</button>
                       </div>
                     </div>
                   )}
@@ -1462,15 +1522,15 @@ export default function ClientSite({ projectData, notFound }) {
                   {/* LinkedIn Post 1 */}
                   {getContentValue('linkedin_title_1') && (
                     <div className="social-post linkedin-post lazy-load">
-                      <img 
-                        src={getContentValue('linkedin_image_1_url', 'https://via.placeholder.com/600x400?text=LinkedIn+Post+1')} 
-                        alt="LinkedIn post" 
-                        className="social-post-image"
-                        loading="lazy"
-                      />
+                      <div className="post-platform-icon">
+                        <FaLinkedin aria-hidden="true" />
+                      </div>
                       <div className="social-post-content">
                         <h4 className="social-post-title">{getContentValue('linkedin_title_1', 'LinkedIn Post Title')}</h4>
-                        <p className="social-post-text">{getContentValue('linkedin_content_1', 'LinkedIn post content will appear here.')}</p>
+                        <p className="social-post-excerpt">
+                          {getContentValue('linkedin_excerpt_1') || getContentValue('linkedin_post_1').substring(0, 120) + '...'}
+                        </p>
+                        <button className="read-more-btn" data-platform="linkedin" data-post-id="1">Read More</button>
                       </div>
                     </div>
                   )}
@@ -1478,15 +1538,15 @@ export default function ClientSite({ projectData, notFound }) {
                   {/* LinkedIn Post 2 */}
                   {getContentValue('linkedin_title_2') && (
                     <div className="social-post linkedin-post lazy-load">
-                      <img 
-                        src={getContentValue('linkedin_image_2_url', 'https://via.placeholder.com/600x400?text=LinkedIn+Post+2')} 
-                        alt="LinkedIn post" 
-                        className="social-post-image"
-                        loading="lazy"
-                      />
+                      <div className="post-platform-icon">
+                        <FaLinkedin aria-hidden="true" />
+                      </div>
                       <div className="social-post-content">
                         <h4 className="social-post-title">{getContentValue('linkedin_title_2', 'LinkedIn Post Title')}</h4>
-                        <p className="social-post-text">{getContentValue('linkedin_content_2', 'LinkedIn post content will appear here.')}</p>
+                        <p className="social-post-excerpt">
+                          {getContentValue('linkedin_excerpt_2') || getContentValue('linkedin_post_2').substring(0, 120) + '...'}
+                        </p>
+                        <button className="read-more-btn" data-platform="linkedin" data-post-id="2">Read More</button>
                       </div>
                     </div>
                   )}
@@ -1494,15 +1554,15 @@ export default function ClientSite({ projectData, notFound }) {
                   {/* LinkedIn Post 3 */}
                   {getContentValue('linkedin_title_3') && (
                     <div className="social-post linkedin-post lazy-load">
-                      <img 
-                        src={getContentValue('linkedin_image_3_url', 'https://via.placeholder.com/600x400?text=LinkedIn+Post+3')} 
-                        alt="LinkedIn post" 
-                        className="social-post-image"
-                        loading="lazy"
-                      />
+                      <div className="post-platform-icon">
+                        <FaLinkedin aria-hidden="true" />
+                      </div>
                       <div className="social-post-content">
                         <h4 className="social-post-title">{getContentValue('linkedin_title_3', 'LinkedIn Post Title')}</h4>
-                        <p className="social-post-text">{getContentValue('linkedin_content_3', 'LinkedIn post content will appear here.')}</p>
+                        <p className="social-post-excerpt">
+                          {getContentValue('linkedin_excerpt_3') || getContentValue('linkedin_post_3').substring(0, 120) + '...'}
+                        </p>
+                        <button className="read-more-btn" data-platform="linkedin" data-post-id="3">Read More</button>
                       </div>
                     </div>
                   )}
@@ -1510,15 +1570,15 @@ export default function ClientSite({ projectData, notFound }) {
                   {/* LinkedIn Post 4 */}
                   {getContentValue('linkedin_title_4') && (
                     <div className="social-post linkedin-post lazy-load">
-                      <img 
-                        src={getContentValue('linkedin_image_4_url', 'https://via.placeholder.com/600x400?text=LinkedIn+Post+4')} 
-                        alt="LinkedIn post" 
-                        className="social-post-image"
-                        loading="lazy"
-                      />
+                      <div className="post-platform-icon">
+                        <FaLinkedin aria-hidden="true" />
+                      </div>
                       <div className="social-post-content">
                         <h4 className="social-post-title">{getContentValue('linkedin_title_4', 'LinkedIn Post Title')}</h4>
-                        <p className="social-post-text">{getContentValue('linkedin_content_4', 'LinkedIn post content will appear here.')}</p>
+                        <p className="social-post-excerpt">
+                          {getContentValue('linkedin_excerpt_4') || getContentValue('linkedin_post_4').substring(0, 120) + '...'}
+                        </p>
+                        <button className="read-more-btn" data-platform="linkedin" data-post-id="4">Read More</button>
                       </div>
                     </div>
                   )}
