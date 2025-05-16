@@ -151,6 +151,70 @@ export default function ClientSite({ projectData, notFound }) {
       height: auto;
       display: block;
     }
+    /* Banner Section Styles */
+    .banner-section {
+      margin: 3rem 0;
+      width: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+    .banner-image-container {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      border-radius: 8px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      transition: transform var(--transition-speed) ease;
+    }
+    .banner-image-container:hover {
+      transform: translateY(-5px);
+    }
+    .banner-image {
+      width: 100%;
+      max-height: 300px;
+      object-fit: contain;
+      display: block;
+    }
+    .banner-default {
+      min-height: 120px;
+      height: 180px;
+      width: 100%;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    .banner-content {
+      padding: 2rem;
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .banner-graphic {
+      width: 100%;
+      height: 100%;
+      opacity: 0.2;
+      background-image: radial-gradient(circle at 25px 25px, white 2%, transparent 0%), 
+                     radial-gradient(circle at 75px 75px, white 2%, transparent 0%);
+      background-size: 100px 100px;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    /* All banners have consistent margins */
+    .banner-section {
+      margin: 3rem 0;
+    }
     /* Header Styles */
     .site-header {
       background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
@@ -1106,6 +1170,28 @@ export default function ClientSite({ projectData, notFound }) {
               </div>
             </div>
           </section>
+
+          {/* Banner 1 Section - Between Bio Cards and Blog Posts */}
+          <section className="banner-section banner-1" id="banner-1">
+            <div className="container">
+              {getContentValue('banner_1_image_url') ? (
+                <div className="banner-image-container lazy-load">
+                  <img 
+                    src={getContentValue('banner_1_image_url')} 
+                    alt="Banner 1" 
+                    className="banner-image"
+                    loading="lazy"
+                  />
+                </div>
+              ) : (
+                <div className="banner-default lazy-load">
+                  <div className="banner-content">
+                    <div className="banner-graphic"></div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
           
           {/* Blog Posts Section */}
           {getContentValue('blog_1_title') && (
@@ -1318,6 +1404,26 @@ export default function ClientSite({ projectData, notFound }) {
                   )}
                 </div>
               </div>
+
+              {/* Banner 2 Section - Between Facebook and Twitter */}
+              <div className="banner-section banner-2" id="banner-2">
+                {getContentValue('banner_2_image_url') ? (
+                  <div className="banner-image-container lazy-load">
+                    <img 
+                      src={getContentValue('banner_2_image_url')} 
+                      alt="Banner 2" 
+                      className="banner-image"
+                      loading="lazy"
+                    />
+                  </div>
+                ) : (
+                  <div className="banner-default lazy-load">
+                    <div className="banner-content">
+                      <div className="banner-graphic"></div>
+                    </div>
+                  </div>
+                )}
+              </div>
               
               {/* Twitter Posts */}
               <div className="platform-container">
@@ -1498,6 +1604,26 @@ export default function ClientSite({ projectData, notFound }) {
                     </div>
                   )}
                 </div>
+              </div>
+
+              {/* Banner 3 Section - Between Instagram and LinkedIn */}
+              <div className="banner-section banner-3" id="banner-3">
+                {getContentValue('banner_3_image_url') ? (
+                  <div className="banner-image-container lazy-load">
+                    <img 
+                      src={getContentValue('banner_3_image_url')} 
+                      alt="Banner 3" 
+                      className="banner-image"
+                      loading="lazy"
+                    />
+                  </div>
+                ) : (
+                  <div className="banner-default lazy-load">
+                    <div className="banner-content">
+                      <div className="banner-graphic"></div>
+                    </div>
+                  </div>
+                )}
               </div>
               
               {/* LinkedIn Posts */}

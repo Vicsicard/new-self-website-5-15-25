@@ -365,6 +365,41 @@ export default function EditContent() {
             </div>
           </div>
         </div>
+
+        {/* Banner 1 Section */}
+        <div className="mb-8">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4 bg-gray-100 p-3 rounded">Banner 1 (Between Bio Cards and Blog Posts)</h3>
+          <div className="grid grid-cols-1 gap-4">
+            <div className="mb-4">
+              <label className="block font-medium text-gray-700 mb-1" htmlFor="banner_1_image_url">
+                Banner 1 Image URL
+              </label>
+              <input
+                type="text"
+                id="banner_1_image_url"
+                name="banner_1_image_url"
+                value={formData.banner_1_image_url || ''}
+                onChange={handleChange}
+                placeholder="https://example.com/banner-image.jpg"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              />
+              {formData.banner_1_image_url && (
+                <div className="mt-2">
+                  <img
+                    src={formData.banner_1_image_url}
+                    alt="Banner 1 Preview"
+                    className="mt-2 h-32 w-auto rounded-md object-cover border border-gray-200"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = '/images/placeholder.png'; // Local fallback image
+                    }}
+                  />
+                  <p className="mt-1 text-xs text-gray-500">Image preview</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
         
         {/* Blog Posts Section */}
         <div className="mb-8">
@@ -600,6 +635,20 @@ export default function EditContent() {
                 />
               </div>
               <div className="mb-4">
+                <label className="block font-medium text-gray-700 mb-1" htmlFor="facebook_excerpt_1">
+                  Facebook Post 1 Excerpt
+                </label>
+                <textarea
+                  id="facebook_excerpt_1"
+                  name="facebook_excerpt_1"
+                  value={formData.facebook_excerpt_1 || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  rows={2}
+                  placeholder="Brief excerpt for post preview"
+                />
+              </div>
+              <div className="mb-4">
                 <label className="block font-medium text-gray-700 mb-1" htmlFor="facebook_post_1">
                   Facebook Post 1 Content
                 </label>
@@ -625,6 +674,20 @@ export default function EditContent() {
                   value={formData.facebook_title_2 || ''}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block font-medium text-gray-700 mb-1" htmlFor="facebook_excerpt_2">
+                  Facebook Post 2 Excerpt
+                </label>
+                <textarea
+                  id="facebook_excerpt_2"
+                  name="facebook_excerpt_2"
+                  value={formData.facebook_excerpt_2 || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  rows={2}
+                  placeholder="Brief excerpt for post preview"
                 />
               </div>
               <div className="mb-4">
@@ -656,6 +719,20 @@ export default function EditContent() {
                 />
               </div>
               <div className="mb-4">
+                <label className="block font-medium text-gray-700 mb-1" htmlFor="facebook_excerpt_3">
+                  Facebook Post 3 Excerpt
+                </label>
+                <textarea
+                  id="facebook_excerpt_3"
+                  name="facebook_excerpt_3"
+                  value={formData.facebook_excerpt_3 || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  rows={2}
+                  placeholder="Brief excerpt for post preview"
+                />
+              </div>
+              <div className="mb-4">
                 <label className="block font-medium text-gray-700 mb-1" htmlFor="facebook_post_3">
                   Facebook Post 3 Content
                 </label>
@@ -684,6 +761,20 @@ export default function EditContent() {
                 />
               </div>
               <div className="mb-4">
+                <label className="block font-medium text-gray-700 mb-1" htmlFor="facebook_excerpt_4">
+                  Facebook Post 4 Excerpt
+                </label>
+                <textarea
+                  id="facebook_excerpt_4"
+                  name="facebook_excerpt_4"
+                  value={formData.facebook_excerpt_4 || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  rows={2}
+                  placeholder="Brief excerpt for post preview"
+                />
+              </div>
+              <div className="mb-4">
                 <label className="block font-medium text-gray-700 mb-1" htmlFor="facebook_post_4">
                   Facebook Post 4 Content
                 </label>
@@ -695,6 +786,41 @@ export default function EditContent() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   rows={4}
                 />
+              </div>
+            </div>
+          </div>
+
+          {/* Banner 2 Section */}
+          <div className="border border-gray-200 rounded-md p-4 mb-4">
+            <h4 className="font-medium text-gray-800 mb-3">Banner 2 (Between Facebook and Twitter)</h4>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="mb-4">
+                <label className="block font-medium text-gray-700 mb-1" htmlFor="banner_2_image_url">
+                  Banner 2 Image URL
+                </label>
+                <input
+                  type="text"
+                  id="banner_2_image_url"
+                  name="banner_2_image_url"
+                  value={formData.banner_2_image_url || ''}
+                  onChange={handleChange}
+                  placeholder="https://example.com/banner-image.jpg"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+                {formData.banner_2_image_url && (
+                  <div className="mt-2">
+                    <img
+                      src={formData.banner_2_image_url}
+                      alt="Banner 2 Preview"
+                      className="mt-2 h-32 w-auto rounded-md object-cover border border-gray-200"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '/images/placeholder.png'; // Local fallback image
+                      }}
+                    />
+                    <p className="mt-1 text-xs text-gray-500">Image preview</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -734,6 +860,20 @@ export default function EditContent() {
                 />
               </div>
               <div className="mb-4">
+                <label className="block font-medium text-gray-700 mb-1" htmlFor="twitter_excerpt_1">
+                  Twitter Post 1 Excerpt
+                </label>
+                <textarea
+                  id="twitter_excerpt_1"
+                  name="twitter_excerpt_1"
+                  value={formData.twitter_excerpt_1 || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  rows={2}
+                  placeholder="Brief excerpt for post preview"
+                />
+              </div>
+              <div className="mb-4">
                 <label className="block font-medium text-gray-700 mb-1" htmlFor="twitter_post_1">
                   Twitter Post 1 Content
                 </label>
@@ -759,6 +899,20 @@ export default function EditContent() {
                   value={formData.twitter_title_2 || ''}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block font-medium text-gray-700 mb-1" htmlFor="twitter_excerpt_2">
+                  Twitter Post 2 Excerpt
+                </label>
+                <textarea
+                  id="twitter_excerpt_2"
+                  name="twitter_excerpt_2"
+                  value={formData.twitter_excerpt_2 || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  rows={2}
+                  placeholder="Brief excerpt for post preview"
                 />
               </div>
               <div className="mb-4">
@@ -811,6 +965,20 @@ export default function EditContent() {
                 />
               </div>
               <div className="mb-4">
+                <label className="block font-medium text-gray-700 mb-1" htmlFor="instagram_excerpt_1">
+                  Instagram Post 1 Excerpt
+                </label>
+                <textarea
+                  id="instagram_excerpt_1"
+                  name="instagram_excerpt_1"
+                  value={formData.instagram_excerpt_1 || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  rows={2}
+                  placeholder="Brief excerpt for post preview"
+                />
+              </div>
+              <div className="mb-4">
                 <label className="block font-medium text-gray-700 mb-1" htmlFor="instagram_post_1">
                   Instagram Post 1 Content
                 </label>
@@ -836,6 +1004,20 @@ export default function EditContent() {
                   value={formData.instagram_title_2 || ''}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block font-medium text-gray-700 mb-1" htmlFor="instagram_excerpt_2">
+                  Instagram Post 2 Excerpt
+                </label>
+                <textarea
+                  id="instagram_excerpt_2"
+                  name="instagram_excerpt_2"
+                  value={formData.instagram_excerpt_2 || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  rows={2}
+                  placeholder="Brief excerpt for post preview"
                 />
               </div>
               <div className="mb-4">
@@ -867,6 +1049,20 @@ export default function EditContent() {
                 />
               </div>
               <div className="mb-4">
+                <label className="block font-medium text-gray-700 mb-1" htmlFor="instagram_excerpt_3">
+                  Instagram Post 3 Excerpt
+                </label>
+                <textarea
+                  id="instagram_excerpt_3"
+                  name="instagram_excerpt_3"
+                  value={formData.instagram_excerpt_3 || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  rows={2}
+                  placeholder="Brief excerpt for post preview"
+                />
+              </div>
+              <div className="mb-4">
                 <label className="block font-medium text-gray-700 mb-1" htmlFor="instagram_post_3">
                   Instagram Post 3 Content
                 </label>
@@ -895,6 +1091,20 @@ export default function EditContent() {
                 />
               </div>
               <div className="mb-4">
+                <label className="block font-medium text-gray-700 mb-1" htmlFor="instagram_excerpt_4">
+                  Instagram Post 4 Excerpt
+                </label>
+                <textarea
+                  id="instagram_excerpt_4"
+                  name="instagram_excerpt_4"
+                  value={formData.instagram_excerpt_4 || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  rows={2}
+                  placeholder="Brief excerpt for post preview"
+                />
+              </div>
+              <div className="mb-4">
                 <label className="block font-medium text-gray-700 mb-1" htmlFor="instagram_post_4">
                   Instagram Post 4 Content
                 </label>
@@ -906,6 +1116,41 @@ export default function EditContent() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   rows={4}
                 />
+              </div>
+            </div>
+          </div>
+
+          {/* Banner 3 Section */}
+          <div className="border border-gray-200 rounded-md p-4 mb-4">
+            <h4 className="font-medium text-gray-800 mb-3">Banner 3 (Between Instagram and LinkedIn)</h4>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="mb-4">
+                <label className="block font-medium text-gray-700 mb-1" htmlFor="banner_3_image_url">
+                  Banner 3 Image URL
+                </label>
+                <input
+                  type="text"
+                  id="banner_3_image_url"
+                  name="banner_3_image_url"
+                  value={formData.banner_3_image_url || ''}
+                  onChange={handleChange}
+                  placeholder="https://example.com/banner-image.jpg"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+                {formData.banner_3_image_url && (
+                  <div className="mt-2">
+                    <img
+                      src={formData.banner_3_image_url}
+                      alt="Banner 3 Preview"
+                      className="mt-2 h-32 w-auto rounded-md object-cover border border-gray-200"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '/images/placeholder.png'; // Local fallback image
+                      }}
+                    />
+                    <p className="mt-1 text-xs text-gray-500">Image preview</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -944,6 +1189,20 @@ export default function EditContent() {
                 />
               </div>
               <div className="mb-4">
+                <label className="block font-medium text-gray-700 mb-1" htmlFor="linkedin_excerpt_1">
+                  LinkedIn Post 1 Excerpt
+                </label>
+                <textarea
+                  id="linkedin_excerpt_1"
+                  name="linkedin_excerpt_1"
+                  value={formData.linkedin_excerpt_1 || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  rows={2}
+                  placeholder="Brief excerpt for post preview"
+                />
+              </div>
+              <div className="mb-4">
                 <label className="block font-medium text-gray-700 mb-1" htmlFor="linkedin_post_1">
                   LinkedIn Post 1 Content
                 </label>
@@ -969,6 +1228,20 @@ export default function EditContent() {
                   value={formData.linkedin_title_2 || ''}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block font-medium text-gray-700 mb-1" htmlFor="linkedin_excerpt_2">
+                  LinkedIn Post 2 Excerpt
+                </label>
+                <textarea
+                  id="linkedin_excerpt_2"
+                  name="linkedin_excerpt_2"
+                  value={formData.linkedin_excerpt_2 || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  rows={2}
+                  placeholder="Brief excerpt for post preview"
                 />
               </div>
               <div className="mb-4">
@@ -1000,6 +1273,20 @@ export default function EditContent() {
                 />
               </div>
               <div className="mb-4">
+                <label className="block font-medium text-gray-700 mb-1" htmlFor="linkedin_excerpt_3">
+                  LinkedIn Post 3 Excerpt
+                </label>
+                <textarea
+                  id="linkedin_excerpt_3"
+                  name="linkedin_excerpt_3"
+                  value={formData.linkedin_excerpt_3 || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  rows={2}
+                  placeholder="Brief excerpt for post preview"
+                />
+              </div>
+              <div className="mb-4">
                 <label className="block font-medium text-gray-700 mb-1" htmlFor="linkedin_post_3">
                   LinkedIn Post 3 Content
                 </label>
@@ -1025,6 +1312,20 @@ export default function EditContent() {
                   value={formData.linkedin_title_4 || ''}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block font-medium text-gray-700 mb-1" htmlFor="linkedin_excerpt_4">
+                  LinkedIn Post 4 Excerpt
+                </label>
+                <textarea
+                  id="linkedin_excerpt_4"
+                  name="linkedin_excerpt_4"
+                  value={formData.linkedin_excerpt_4 || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  rows={2}
+                  placeholder="Brief excerpt for post preview"
                 />
               </div>
               <div className="mb-4">
