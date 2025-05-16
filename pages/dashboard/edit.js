@@ -318,6 +318,51 @@ export default function EditContent() {
                 HTML formatting is supported
               </p>
             </div>
+            
+            {/* Bio Card 1 */}
+            <div className="mb-4">
+              <label className="block font-medium text-gray-700 mb-1" htmlFor="bio_card_1">
+                Bio Card 1
+              </label>
+              <textarea
+                id="bio_card_1"
+                name="bio_card_1"
+                value={formData.bio_card_1 || ''}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                rows={4}
+              />
+            </div>
+            
+            {/* Bio Card 2 */}
+            <div className="mb-4">
+              <label className="block font-medium text-gray-700 mb-1" htmlFor="bio_card_2">
+                Bio Card 2
+              </label>
+              <textarea
+                id="bio_card_2"
+                name="bio_card_2"
+                value={formData.bio_card_2 || ''}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                rows={4}
+              />
+            </div>
+            
+            {/* Bio Card 3 */}
+            <div className="mb-4">
+              <label className="block font-medium text-gray-700 mb-1" htmlFor="bio_card_3">
+                Bio Card 3
+              </label>
+              <textarea
+                id="bio_card_3"
+                name="bio_card_3"
+                value={formData.bio_card_3 || ''}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                rows={4}
+              />
+            </div>
           </div>
         </div>
         
