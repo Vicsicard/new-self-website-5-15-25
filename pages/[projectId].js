@@ -178,22 +178,26 @@ export default function ClientSite({ projectData, notFound }) {
     }
     .profile-section {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
+      justify-content: space-between;
       align-items: center;
-      text-align: center;
       position: relative;
       z-index: 3;
     }
+    .profile-text {
+      text-align: left;
+      max-width: 60%;
+    }
     .profile-image-container {
-      width: 180px;
-      height: 180px;
+      width: 250px;
+      height: 250px;
       position: relative;
-      margin-bottom: 2rem;
       border-radius: 50%;
-      padding: 5px;
+      padding: 6px;
       background: linear-gradient(45deg, var(--accent-color), white);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.15);
       animation: pulse 3s infinite;
+      margin-left: 2rem;
     }
     @keyframes pulse {
       0% {
@@ -214,14 +218,17 @@ export default function ClientSite({ projectData, notFound }) {
       border: 4px solid white;
     }
     .header-title {
-      margin-bottom: 0.5rem;
+      font-size: clamp(3rem, 6vw, 5rem);
+      margin-bottom: 1rem;
       text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+      line-height: 1.1;
     }
     .header-subtitle {
-      font-size: clamp(1.1rem, 2vw, 1.5rem);
+      font-size: clamp(1.3rem, 2.5vw, 1.8rem);
       opacity: 0.9;
-      max-width: 800px;
-      margin: 0 auto 2rem;
+      max-width: 600px;
+      margin: 0 0 2rem 0;
+      line-height: 1.4;
     }
     
     /* Section Styles */
@@ -241,57 +248,292 @@ export default function ClientSite({ projectData, notFound }) {
     .bio-section {
       background-color: var(--background-color);
       padding: 5rem 0;
+      position: relative;
+    }
+    .bio-section h2 {
+      font-size: clamp(2.2rem, 5vw, 3.2rem);
+      margin-bottom: 2.5rem;
+      text-align: center;
+      position: relative;
+      padding-bottom: 1.5rem;
+    }
+    .bio-section h2:after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+      border-radius: 2px;
     }
     .bio-content {
       max-width: 800px;
       margin: 0 auto;
-      line-height: 1.8;
+      line-height: 1.9;
+      font-size: clamp(1.1rem, 1.8vw, 1.25rem);
+      position: relative;
+      padding: 2rem;
+      border-radius: 12px;
+      background-color: rgba(255, 255, 255, 0.8);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    }
+    .bio-content p:first-of-type {
+      font-size: 1.3em;
+      color: var(--primary-color);
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+    }
+    .bio-content p:last-of-type {
+      margin-bottom: 0;
+    }
+    .bio-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: radial-gradient(var(--accent-color)10 1px, transparent 1px);
+      background-size: 30px 30px;
+      opacity: 0.3;
+      z-index: 0;
     }
     
     /* Blog Section */
     .blog-section {
-      background-color: var(--secondary-color)10;
+      background: linear-gradient(to bottom, var(--background-color), var(--secondary-color)15);
       position: relative;
+      padding: 5rem 0;
+      overflow: hidden;
+    }
+    .blog-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      opacity: 0.5;
+      z-index: 0;
+    }
+    .blog-section h2 {
+      font-size: clamp(2.5rem, 5vw, 3.5rem);
+      margin-bottom: 2rem;
+      text-align: center;
+      position: relative;
+      padding-bottom: 1.5rem;
+      color: var(--primary-color);
+      text-shadow: 0px 2px 4px rgba(0,0,0,0.1);
+    }
+    .blog-section h2::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 150px;
+      height: 5px;
+      background: linear-gradient(90deg, var(--accent-color), var(--primary-color), var(--accent-color));
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     .blog-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       grid-template-rows: repeat(2, auto);
       gap: 2rem;
+      position: relative;
+      z-index: 1;
     }
     .blog-card {
       background: var(--card-bg);
-      border-radius: 12px;
+      border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-      transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      transition: all var(--transition-speed) ease;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      position: relative;
+      border: 1px solid rgba(255,255,255,0.8);
     }
     .blog-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      transform: translateY(-8px);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.15);
     }
     .blog-image {
       width: 100%;
-      height: 200px;
+      height: 220px;
       object-fit: cover;
+      border-bottom: 3px solid var(--accent-color);
     }
     .blog-content {
-      padding: 1.5rem;
+      padding: 2rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .blog-card h3 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: #000;
+      line-height: 1.3;
     }
     .blog-excerpt {
-      color: var(--secondary-color);
-      margin-bottom: 1rem;
-      font-size: 0.95rem;
+      color: #333;
+      font-style: italic;
+      margin-bottom: 1.5rem;
+      font-size: 1rem;
       line-height: 1.7;
+      flex: 1;
     }
-    .blog-link {
+    .read-more-btn {
       display: inline-block;
-      margin-top: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+      color: white;
       font-weight: 600;
-      color: var(--accent-color);
+      border-radius: 50px;
+      text-align: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      align-self: flex-start;
+      margin-top: auto;
     }
-    .blog-link:hover {
-      color: var(--primary-color);
+    .read-more-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+    }
+    
+    /* Modal Styles */
+    .blog-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
+      backdrop-filter: blur(5px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    .blog-modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .blog-modal {
+      background: white;
+      width: 90%;
+      max-width: 900px;
+      max-height: 90vh;
+      border-radius: 16px;
+      overflow-y: auto;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+      transform: translateY(30px);
+      opacity: 0;
+      transition: all 0.4s ease;
+      position: relative;
+    }
+    .blog-modal.active {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #555;
+      transition: all 0.2s ease;
+    }
+    .modal-close:hover {
+      background: rgba(0,0,0,0.2);
+      color: #000;
+    }
+    .modal-content {
+      padding: 3rem;
+    }
+    .modal-title {
+      font-size: 2.5rem;
+      color: #000;
+      margin-bottom: 2rem;
+      text-align: center;
+      position: relative;
+      padding-bottom: 1rem;
+      line-height: 1.3;
+    }
+    .modal-title::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+      border-radius: 3px;
+    }
+    .modal-body {
+      color: #000;
+      font-size: 1.1rem;
+      line-height: 1.8;
+    }
+    .modal-body p {
+      margin-bottom: 1.5rem;
+    }
+    .modal-body p:first-of-type {
+      font-size: 1.2rem;
+      font-weight: 500;
+    }
+    .modal-body p:last-of-type {
+      margin-bottom: 0;
+    }
+    .modal-body h3 {
+      font-size: 1.8rem;
+      color: #000;
+      margin: 2rem 0 1rem;
+    }
+    .modal-body h4 {
+      font-size: 1.4rem;
+      color: #000;
+      margin: 1.5rem 0 1rem;
+    }
+    .modal-body ul, .modal-body ol {
+      margin: 1.5rem 0;
+      padding-left: 2rem;
+    }
+    .modal-body li {
+      margin-bottom: 0.5rem;
+    }
+    .modal-body img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin: 1.5rem 0;
+    }
+    .modal-body blockquote {
+      border-left: 5px solid var(--accent-color);
+      padding-left: 1.5rem;
+      margin-left: 0;
+      font-style: italic;
+      color: #555;
     }
     
     /* Quote Section */
@@ -308,38 +550,88 @@ export default function ClientSite({ projectData, notFound }) {
     
     /* Bio Cards Section */
     .bio-cards-section {
-      background-color: var(--secondary-color)05;
-      padding: 3rem 0;
+      background: linear-gradient(to bottom, var(--background-color), var(--secondary-color)08);
+      padding: 4rem 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .bio-cards-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: linear-gradient(45deg, var(--primary-color)05 25%, transparent 25%, transparent 75%, var(--primary-color)05 75%, var(--primary-color)05),
+                      linear-gradient(45deg, var(--primary-color)05 25%, transparent 25%, transparent 75%, var(--primary-color)05 75%, var(--primary-color)05);
+      background-size: 60px 60px;
+      background-position: 0 0, 30px 30px;
+      opacity: 0.4;
+      z-index: 0;
     }
     .bio-cards-row {
       display: flex;
       flex-direction: row;
       justify-content: space-between;
-      gap: 1.5rem;
-      margin-top: 1rem;
+      gap: 2rem;
+      margin-top: 2rem;
       flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
     }
     .bio-card {
       flex: 1;
       min-width: 250px;
       background: var(--card-bg);
-      border-radius: 12px;
-      padding: 2rem;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-      transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.05), 0 20px 40px -20px rgba(var(--primary-color), 0.15);
+      transition: all var(--transition-speed) ease;
       display: flex;
       flex-direction: column;
       justify-content: center;
+      position: relative;
+      border: 1px solid rgba(255,255,255,0.8);
+      overflow: hidden;
+    }
+    .bio-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 6px;
+      background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
     }
     .bio-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2), 0 15px 20px -10px rgba(var(--accent-color), 0.3);
     }
     .bio-card-text {
-      font-size: 1.1rem;
-      line-height: 1.7;
+      font-size: 1.15rem;
+      line-height: 1.8;
       margin: 0;
       text-align: center;
+      position: relative;
+      z-index: 1;
+      color: var(--text-color);
+    }
+    .bio-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 80px;
+      height: 80px;
+      background: radial-gradient(circle at bottom right, var(--accent-color)15, transparent 70%);
+      border-radius: 0 0 16px 0;
+      opacity: 0.6;
+      transition: all var(--transition-speed) ease;
+    }
+    .bio-card:hover::after {
+      width: 120px;
+      height: 120px;
+      opacity: 0.8;
     }
     .quote-card {
       background: var(--card-bg);
@@ -513,9 +805,19 @@ export default function ClientSite({ projectData, notFound }) {
       .header-content {
         padding: 4rem 0;
       }
+      .profile-section {
+        flex-direction: column-reverse;
+        text-align: center;
+      }
+      .profile-text {
+        text-align: center;
+        max-width: 100%;
+        margin-top: 2rem;
+      }
       .profile-image-container {
-        width: 150px;
-        height: 150px;
+        width: 180px;
+        height: 180px;
+        margin-left: 0;
       }
       .blog-grid, .quotes-grid, .social-grid {
         grid-template-columns: 1fr;
@@ -543,8 +845,9 @@ export default function ClientSite({ projectData, notFound }) {
     }
   `;
 
-  // Load JS for lazy loading images
+  // Load JS for lazy loading images and modal functionality
   useEffect(() => {
+    // Lazy loading functionality
     const lazyLoadElements = document.querySelectorAll('.lazy-load');
     
     const observer = new IntersectionObserver((entries) => {
@@ -560,12 +863,111 @@ export default function ClientSite({ projectData, notFound }) {
       observer.observe(el);
     });
     
+    // Modal functionality for blog posts
+    const modalOverlay = document.getElementById('blog-modal-overlay');
+    const modal = document.getElementById('blog-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalBody = document.getElementById('modal-body');
+    const modalClose = document.getElementById('modal-close');
+    const readMoreButtons = document.querySelectorAll('.read-more-btn');
+    
+    // Function to open modal with blog post content
+    const openModal = (blogId) => {
+      if (!modalOverlay || !modal) return;
+      
+      // Get blog content based on ID
+      const title = getContentValue(`blog_${blogId}_title`, '');
+      const content = getContentValue(`blog_${blogId}`, '');
+      
+      // Set modal content
+      if (modalTitle) modalTitle.textContent = title;
+      
+      // Format content for the modal body
+      if (modalBody) {
+        // Create formatted paragraphs from content
+        const formattedContent = content
+          .split('\n\n')
+          .map(paragraph => `<p>${paragraph}</p>`)
+          .join('');
+        
+        modalBody.innerHTML = formattedContent || '<p>No content available</p>';
+      }
+      
+      // Show modal with animation
+      modalOverlay.classList.add('active');
+      setTimeout(() => {
+        modal.classList.add('active');
+      }, 10);
+      
+      // Prevent body scrolling when modal is open
+      document.body.style.overflow = 'hidden';
+    };
+    
+    // Function to close modal
+    const closeModal = () => {
+      if (!modal || !modalOverlay) return;
+      
+      // Hide modal with animation
+      modal.classList.remove('active');
+      
+      setTimeout(() => {
+        modalOverlay.classList.remove('active');
+        // Clear modal content
+        if (modalBody) modalBody.innerHTML = '';
+        // Re-enable body scrolling
+        document.body.style.overflow = '';
+      }, 300);
+    };
+    
+    // Add click event to Read More buttons
+    if (readMoreButtons) {
+      readMoreButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const blogId = button.getAttribute('data-blog-id');
+          if (blogId) openModal(blogId);
+        });
+      });
+    }
+    
+    // Add click events to close modal
+    if (modalClose) {
+      modalClose.addEventListener('click', closeModal);
+    }
+    
+    if (modalOverlay) {
+      modalOverlay.addEventListener('click', (event) => {
+        if (event.target === modalOverlay) closeModal();
+      });
+    }
+    
+    // Add keyboard event to close modal with Escape key
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeModal();
+    });
+    
     return () => {
+      // Clean up event listeners
       lazyLoadElements.forEach(el => {
         observer.unobserve(el);
       });
+      
+      if (readMoreButtons) {
+        readMoreButtons.forEach(button => {
+          button.removeEventListener('click', () => {});
+        });
+      }
+      
+      if (modalClose) {
+        modalClose.removeEventListener('click', closeModal);
+      }
+      
+      if (modalOverlay) {
+        modalOverlay.removeEventListener('click', () => {});
+      }
+      
+      document.removeEventListener('keydown', () => {});
     };
-  }, []);
+  }, [getContentValue]);
 
   return (
     <>
@@ -584,16 +986,18 @@ export default function ClientSite({ projectData, notFound }) {
             <div className="container">
               <div className="header-content">
                 <div className="profile-section lazy-load">
+                  <div className="profile-text">
+                    <h1 className="header-title">{getContentValue('rendered_title', 'Personal Brand Site')}</h1>
+                    <p className="header-subtitle">{getContentValue('rendered_subtitle', 'Welcome to my site')}</p>
+                  </div>
                   <div className="profile-image-container">
                     <img 
-                      src={getContentValue('profile_image_url', 'https://via.placeholder.com/150')} 
+                      src={getContentValue('profile_image_url', 'https://via.placeholder.com/250')} 
                       alt={getContentValue('client_name', 'Profile')} 
                       className="profile-image" 
                       loading="lazy"
                     />
                   </div>
-                  <h1 className="header-title">{getContentValue('rendered_title', 'Personal Brand Site')}</h1>
-                  <p className="header-subtitle">{getContentValue('rendered_subtitle', 'Welcome to my site')}</p>
                 </div>
               </div>
             </div>
@@ -643,93 +1047,110 @@ export default function ClientSite({ projectData, notFound }) {
             </div>
           </section>
           
-          {/* Blog Posts Section - New section for all 4 blog posts */}
-          <section className="blog-section" id="blog">
-            <div className="container">
-              <h2 className="section-title">Blog Posts</h2>
-              <div className="blog-grid">
-                {/* Blog Post 1 */}
-                {getContentValue('blog_1_title') && (
-                  <article className="blog-card lazy-load">
-                    <img 
-                      src={getContentValue('blog_1_image_url', 'https://via.placeholder.com/600x400?text=Blog+Post+1')} 
-                      alt={getContentValue('blog_1_title', 'Blog Post')} 
-                      className="blog-image" 
-                      loading="lazy"
-                    />
-                    <div className="blog-content">
-                      <h3>{getContentValue('blog_1_title', 'Blog Post Title')}</h3>
-                      <p className="blog-excerpt">{getContentValue('blog_1_excerpt', 'A short excerpt of this blog post...')}</p>
-                      <div dangerouslySetInnerHTML={{ 
-                        __html: getContentValue('blog_1', '<p>Blog content will appear here</p>').substring(0, 150) + '...' 
-                      }}></div>
-                      <a href="#" className="blog-link" aria-label={`Read more about ${getContentValue('blog_1_title', 'Blog Post')}`}>Read More</a>
+          {/* Blog Posts Section */}
+          {getContentValue('blog_1_title') && (
+            <section className="blog-section" id="blog">
+              <div className="container">
+                <h2>Blog Posts</h2>
+                <div className="blog-grid">
+                  {/* Blog Post 1 */}
+                  {getContentValue('blog_1_title') && (
+                    <div className="blog-card lazy-load" data-blog-id="1">
+                      {getContentValue('blog_1_image_url') && (
+                        <img
+                          src={getContentValue('blog_1_image_url')}
+                          alt={getContentValue('blog_1_title')}
+                          className="blog-image"
+                          loading="lazy"
+                        />
+                      )}
+                      <div className="blog-content">
+                        <h3>{getContentValue('blog_1_title')}</h3>
+                        <p className="blog-excerpt">
+                          {getContentValue('blog_1_excerpt') || getContentValue('blog_1').substring(0, 120) + '...'}
+                        </p>
+                        <button className="read-more-btn" data-blog-id="1">Read More</button>
+                      </div>
                     </div>
-                  </article>
-                )}
+                  )}
+                  
+                  {/* Blog Post 2 */}
+                  {getContentValue('blog_2_title') && (
+                    <div className="blog-card lazy-load" data-blog-id="2">
+                      {getContentValue('blog_2_image_url') && (
+                        <img
+                          src={getContentValue('blog_2_image_url')}
+                          alt={getContentValue('blog_2_title')}
+                          className="blog-image"
+                          loading="lazy"
+                        />
+                      )}
+                      <div className="blog-content">
+                        <h3>{getContentValue('blog_2_title')}</h3>
+                        <p className="blog-excerpt">
+                          {getContentValue('blog_2_excerpt') || getContentValue('blog_2').substring(0, 120) + '...'}
+                        </p>
+                        <button className="read-more-btn" data-blog-id="2">Read More</button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Blog Post 3 */}
+                  {getContentValue('blog_3_title') && (
+                    <div className="blog-card lazy-load" data-blog-id="3">
+                      {getContentValue('blog_3_image_url') && (
+                        <img
+                          src={getContentValue('blog_3_image_url')}
+                          alt={getContentValue('blog_3_title')}
+                          className="blog-image"
+                          loading="lazy"
+                        />
+                      )}
+                      <div className="blog-content">
+                        <h3>{getContentValue('blog_3_title')}</h3>
+                        <p className="blog-excerpt">
+                          {getContentValue('blog_3_excerpt') || getContentValue('blog_3').substring(0, 120) + '...'}
+                        </p>
+                        <button className="read-more-btn" data-blog-id="3">Read More</button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Blog Post 4 */}
+                  {getContentValue('blog_4_title') && (
+                    <div className="blog-card lazy-load" data-blog-id="4">
+                      {getContentValue('blog_4_image_url') && (
+                        <img
+                          src={getContentValue('blog_4_image_url')}
+                          alt={getContentValue('blog_4_title')}
+                          className="blog-image"
+                          loading="lazy"
+                        />
+                      )}
+                      <div className="blog-content">
+                        <h3>{getContentValue('blog_4_title')}</h3>
+                        <p className="blog-excerpt">
+                          {getContentValue('blog_4_excerpt') || getContentValue('blog_4').substring(0, 120) + '...'}
+                        </p>
+                        <button className="read-more-btn" data-blog-id="4">Read More</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 
-                {/* Blog Post 2 */}
-                {getContentValue('blog_2_title') && (
-                  <article className="blog-card lazy-load">
-                    <img 
-                      src={getContentValue('blog_2_image_url', 'https://via.placeholder.com/600x400?text=Blog+Post+2')} 
-                      alt={getContentValue('blog_2_title', 'Blog Post')} 
-                      className="blog-image" 
-                      loading="lazy"
-                    />
-                    <div className="blog-content">
-                      <h3>{getContentValue('blog_2_title', 'Blog Post Title')}</h3>
-                      <p className="blog-excerpt">{getContentValue('blog_2_excerpt', 'A short excerpt of this blog post...')}</p>
-                      <div dangerouslySetInnerHTML={{ 
-                        __html: getContentValue('blog_2', '<p>Blog content will appear here</p>').substring(0, 150) + '...' 
-                      }}></div>
-                      <a href="#" className="blog-link" aria-label={`Read more about ${getContentValue('blog_2_title', 'Blog Post')}`}>Read More</a>
+                {/* Blog Post Modals */}
+                <div className="blog-modal-overlay" id="blog-modal-overlay">
+                  <div className="blog-modal" id="blog-modal">
+                    <div className="modal-close" id="modal-close">×</div>
+                    <div className="modal-content">
+                      <h2 className="modal-title" id="modal-title"></h2>
+                      <div className="modal-body" id="modal-body"></div>
                     </div>
-                  </article>
-                )}
-                
-                {/* Blog Post 3 */}
-                {getContentValue('blog_3_title') && (
-                  <article className="blog-card lazy-load">
-                    <img 
-                      src={getContentValue('blog_3_image_url', 'https://via.placeholder.com/600x400?text=Blog+Post+3')} 
-                      alt={getContentValue('blog_3_title', 'Blog Post')} 
-                      className="blog-image" 
-                      loading="lazy"
-                    />
-                    <div className="blog-content">
-                      <h3>{getContentValue('blog_3_title', 'Blog Post Title')}</h3>
-                      <p className="blog-excerpt">{getContentValue('blog_3_excerpt', 'A short excerpt of this blog post...')}</p>
-                      <div dangerouslySetInnerHTML={{ 
-                        __html: getContentValue('blog_3', '<p>Blog content will appear here</p>').substring(0, 150) + '...' 
-                      }}></div>
-                      <a href="#" className="blog-link" aria-label={`Read more about ${getContentValue('blog_3_title', 'Blog Post')}`}>Read More</a>
-                    </div>
-                  </article>
-                )}
-                
-                {/* Blog Post 4 */}
-                {getContentValue('blog_4_title') && (
-                  <article className="blog-card lazy-load">
-                    <img 
-                      src={getContentValue('blog_4_image_url', 'https://via.placeholder.com/600x400?text=Blog+Post+4')} 
-                      alt={getContentValue('blog_4_title', 'Blog Post')} 
-                      className="blog-image" 
-                      loading="lazy"
-                    />
-                    <div className="blog-content">
-                      <h3>{getContentValue('blog_4_title', 'Blog Post Title')}</h3>
-                      <p className="blog-excerpt">{getContentValue('blog_4_excerpt', 'A short excerpt of this blog post...')}</p>
-                      <div dangerouslySetInnerHTML={{ 
-                        __html: getContentValue('blog_4', '<p>Blog content will appear here</p>').substring(0, 150) + '...' 
-                      }}></div>
-                      <a href="#" className="blog-link" aria-label={`Read more about ${getContentValue('blog_4_title', 'Blog Post')}`}>Read More</a>
-                    </div>
-                  </article>
-                )}
+                  </div>
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          )}
           
           {/* Quote 1 Section */}
           <section className="quotes-section" id="quotes">
