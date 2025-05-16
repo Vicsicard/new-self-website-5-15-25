@@ -61,6 +61,8 @@ export default function ClientSite({ projectData, notFound }) {
   const primaryColor = getContentValue('primary_color', '#3b82f6');
   const accentColor = getContentValue('accent_color', '#10b981');
   const textColor = getContentValue('text_color', '#1f2937');
+  const headingColor = getContentValue('heading_color', '#222222');
+  const titleColor = getContentValue('title_color', primaryColor);
   const backgroundColor = getContentValue('background_color', '#ffffff');
   const fontFamily = getContentValue('font_family', 'Arial, sans-serif');
 
@@ -71,6 +73,8 @@ export default function ClientSite({ projectData, notFound }) {
       --secondary-color: ${getContentValue('secondary_color', '#4b5563')};
       --accent-color: ${accentColor};
       --text-color: ${textColor};
+      --heading-color: ${headingColor};
+      --title-color: ${titleColor};
       --background-color: ${backgroundColor};
       --card-bg: #ffffff;
       --transition-speed: 0.3s;
@@ -83,6 +87,7 @@ export default function ClientSite({ projectData, notFound }) {
       padding: 0;
       line-height: 1.6;
       overflow-x: hidden;
+      scroll-behavior: smooth;
     }
     .container {
       max-width: 1200px;
@@ -99,7 +104,7 @@ export default function ClientSite({ projectData, notFound }) {
     h1, h2, h3, h4, h5, h6 {
       margin-top: 0;
       line-height: 1.2;
-      color: var(--primary-color);
+      color: var(--heading-color);
       font-weight: 700;
     }
     h1 {
@@ -262,6 +267,14 @@ export default function ClientSite({ projectData, notFound }) {
       box-shadow: 0 15px 30px rgba(0,0,0,0.15);
       animation: pulse 3s infinite;
       margin-left: 2rem;
+      transition: transform 0.5s ease;
+      transform-style: preserve-3d;
+      perspective: 1000px;
+    }
+    
+    .profile-image-container:hover {
+      transform: perspective(500px) rotateY(-15deg) rotateX(10deg) scale(1.05);
+      box-shadow: 30px 30px 30px rgba(0,0,0,0.1);
     }
     @keyframes pulse {
       0% {
@@ -289,10 +302,33 @@ export default function ClientSite({ projectData, notFound }) {
     }
     .header-subtitle {
       font-size: clamp(1.3rem, 2.5vw, 1.8rem);
-      opacity: 0.9;
+      opacity: 0;
       max-width: 600px;
       margin: 0 0 2rem 0;
       line-height: 1.4;
+      overflow: hidden;
+      border-right: 3px solid var(--accent-color);
+      white-space: nowrap;
+      animation: 
+        typing 3.5s steps(40, end) 0.5s forwards,
+        blink-caret 0.75s step-end infinite,
+        fadeIn 0.5s ease 0.2s forwards;
+      animation-delay: 0.5s;
+    }
+    
+    @keyframes typing {
+      from { width: 0 }
+      to { width: 100%; white-space: normal; border-right: none; }
+    }
+    
+    @keyframes blink-caret {
+      from, to { border-color: transparent }
+      50% { border-color: var(--accent-color) }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0 }
+      to { opacity: 0.9 }
     }
     
     /* Section Styles */
@@ -440,7 +476,7 @@ export default function ClientSite({ projectData, notFound }) {
       font-size: 1.75rem;
       line-height: 1.3;
       margin-bottom: 1rem;
-      color: var(--primary-color);
+      color: var(--title-color);
       font-weight: 700;
     }
     .blog-excerpt {
@@ -449,23 +485,38 @@ export default function ClientSite({ projectData, notFound }) {
       margin-bottom: 1rem;
     }
     .read-more-btn {
-      display: inline-block;
-      background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+      padding: 0.5rem 1.25rem;
+      background: linear-gradient(to right, var(--primary-color), var(--accent-color));
       color: white;
       border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 50px;
-      font-size: 0.9rem;
-      font-weight: 600;
+      border-radius: 20px;
       cursor: pointer;
-      transition: all var(--transition-speed) ease;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      margin-top: 0.5rem;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      font-size: 0.9rem;
+      margin-top: auto;
+      align-self: flex-start;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+      font-weight: 500;
+    }
+    .read-more-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(to right, rgba(255,255,255,0.1), rgba(255,255,255,0.3));
+      transform: translateX(-100%);
+      transition: transform 0.4s ease;
     }
     .read-more-btn:hover {
-      background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
-      transform: translateY(-2px);
-      box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+      transform: translateY(-5px) scale(1.05);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+    }
+    .read-more-btn:hover::before {
+      transform: translateX(100%);
     }
     .modal-overlay {
       position: fixed;
@@ -599,9 +650,10 @@ export default function ClientSite({ projectData, notFound }) {
     }
     .quotes-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: 1fr;
       grid-template-rows: auto;
       gap: 2rem;
+      width: 100%;
     }
     
     /* Bio Cards Section */
@@ -690,37 +742,76 @@ export default function ClientSite({ projectData, notFound }) {
       opacity: 0.8;
     }
     .quote-card {
-      background: var(--card-bg);
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      padding: 2.5rem;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.3);
       position: relative;
-      transition: transform var(--transition-speed) ease;
+      transition: all var(--transition-speed) ease;
+      overflow: hidden;
+      width: 100%;
+      max-width: 100%;
+      margin: 0 auto;
     }
     .quote-card:hover {
-      transform: translateY(-5px);
+      transform: translateY(-10px) scale(1.02);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+      border-color: rgba(255, 255, 255, 0.6);
+    }
+    .quote-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(120deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 50%);
+      z-index: 0;
     }
     .quote-icon {
-      color: var(--accent-color)15;
-      font-size: 3rem;
-      position: absolute;
-      top: 1rem;
-      left: 1rem;
-      opacity: 0.7;
-    }
-    .quote-text {
+      color: var(--accent-color);
+      font-size: 2.5rem;
+      margin-bottom: 1.25rem;
+      display: block;
       position: relative;
       z-index: 1;
-      font-style: italic;
-      line-height: 1.8;
-      margin-bottom: 1rem;
+      transform: rotate(-8deg);
+      filter: drop-shadow(0 3px 5px rgba(0,0,0,0.1));
+      transition: all 0.4s ease;
     }
-    .quote-author {
-      text-align: right;
-      font-weight: 600;
+    .quote-card:hover .quote-icon {
+      transform: rotate(0deg) scale(1.1);
       color: var(--primary-color);
     }
-    
+    .quote-text {
+      font-size: 1.4rem;
+      line-height: 1.8;
+      color: var(--text-color);
+      font-style: italic;
+      margin-bottom: 1.5rem;
+      position: relative;
+      z-index: 1;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      font-weight: 500;
+    }
+    .quote-author {
+      font-weight: 700;
+      color: var(--title-color);
+      text-align: right;
+      font-size: 1.1rem;
+      position: relative;
+      z-index: 1;
+      opacity: 0.9;
+      font-style: normal;
+      transition: all 0.3s ease;
+    }
+    .quote-card:hover .quote-author {
+      transform: translateX(-5px);
+      opacity: 1;
+    }
     /* Social Media Section */
     .social-media-section {
       padding: 4rem 0;
@@ -741,6 +832,7 @@ export default function ClientSite({ projectData, notFound }) {
     }
     .platform-title {
       margin: 0;
+      color: var(--title-color);
     }
     .platform-url {
       margin-left: auto;
@@ -758,18 +850,32 @@ export default function ClientSite({ projectData, notFound }) {
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-      transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+      transition: all var(--transition-speed) cubic-bezier(0.34, 1.56, 0.64, 1);
       display: flex;
       flex-direction: column;
       height: 100%;
       position: relative;
       border-top: 4px solid;
+      z-index: 1;
+    }
+    .social-post::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: -1;
+      background: linear-gradient(135deg, rgba(255,255,255,0.5), rgba(255,255,255,0));
+      opacity: 0;
+      transition: opacity var(--transition-speed) ease;
+      border-radius: 12px;
     }
     .social-post.facebook-post {
       border-color: #1877F2;
     }
     .social-post.twitter-post {
-      border-color: #1DA1F2;
+      border-color: #000000;
     }
     .social-post.instagram-post {
       border-color: #C13584;
@@ -778,23 +884,30 @@ export default function ClientSite({ projectData, notFound }) {
       border-color: #0A66C2;
     }
     .social-post:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      transform: translateY(-8px) scale(1.03);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+    }
+    .social-post:hover::before {
+      opacity: 1;
     }
     .post-platform-icon {
       position: relative;
+      padding: 0.75rem;
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: 1.5rem 0;
-      font-size: 2rem;
-      background-color: rgba(240, 240, 240, 0.5);
+      background: rgba(0,0,0,0.03);
+      font-size: 1.5rem;
+      transition: all 0.4s ease;
+    }
+    .social-post:hover .post-platform-icon {
+      transform: scale(1.1) rotate(5deg);
     }
     .facebook-post .post-platform-icon {
       color: #1877F2;
     }
     .twitter-post .post-platform-icon {
-      color: #1DA1F2;
+      color: #000000;
     }
     .instagram-post .post-platform-icon {
       color: #C13584;
@@ -813,7 +926,7 @@ export default function ClientSite({ projectData, notFound }) {
       font-weight: 700;
       line-height: 1.3;
       margin-bottom: 1rem;
-      color: var(--primary-color);
+      color: var(--title-color);
     }
     .social-post-excerpt {
       color: #666;
@@ -859,6 +972,14 @@ export default function ClientSite({ projectData, notFound }) {
       max-width: 700px;
       margin-left: auto;
       margin-right: auto;
+      color: var(--title-color);
+    }
+    .section-title {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 2rem;
+      z-index: 1;
+      color: var(--title-color);
     }
     .footer-email {
       display: inline-block;
@@ -891,6 +1012,10 @@ export default function ClientSite({ projectData, notFound }) {
       opacity: 0;
       transform: translateY(20px);
       transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .lazy-load.visible {
+      opacity: 1;
+      transform: translateY(0);
     }
     .lazy-load.loaded {
       opacity: 1;
@@ -947,22 +1072,17 @@ export default function ClientSite({ projectData, notFound }) {
 
   // Load JS for lazy loading images and modal functionality
   useEffect(() => {
-    // Lazy loading functionality
-    const lazyLoadElements = document.querySelectorAll('.lazy-load');
-    
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('loaded');
-          observer.unobserve(entry.target);
-        }
-      });
-    });
-    
-    lazyLoadElements.forEach(el => {
-      observer.observe(el);
-    });
-    
+    // Only run on client-side
+    if (typeof window !== 'undefined') {
+      // Set up modal functionality
+      setupModals();
+      
+      // Set up lazy loading animations
+      setupLazyLoadAnimations();
+    }
+  }, []);
+  
+  const setupModals = () => {
     // Modal functionality for blog and social media posts
     const modalOverlay = document.getElementById('content-modal-overlay');
     const modal = document.getElementById('content-modal');
@@ -971,10 +1091,10 @@ export default function ClientSite({ projectData, notFound }) {
     const modalClose = document.getElementById('modal-close');
     const readMoreButtons = document.querySelectorAll('.read-more-btn');
     
+    if (!modalOverlay || !modal || !modalTitle || !modalBody || !modalClose) return;
+    
     // Function to open modal with post content
     const openModal = (postId, platform = 'blog') => {
-      if (!modalOverlay || !modal) return;
-      
       // Get content based on platform and ID
       let title, content;
       
@@ -1003,95 +1123,80 @@ export default function ClientSite({ projectData, notFound }) {
       }
       
       // Set modal content
-      if (modalTitle) modalTitle.textContent = title;
+      modalTitle.innerText = title;
       
-      // Format content for the modal body
-      if (modalBody) {
-        // Create formatted paragraphs from content
-        const formattedContent = content
-          .split('\n\n')
-          .map(paragraph => `<p>${paragraph}</p>`)
-          .join('');
-        
-        modalBody.innerHTML = formattedContent || '<p>No content available</p>';
-      }
+      // Format content as paragraphs
+      const formattedContent = content
+        .split('\n\n')
+        .map(paragraph => `<p>${paragraph.replace(/\n/g, '<br>')}</p>`)
+        .join('');
       
-      // Show modal with animation
+      modalBody.innerHTML = formattedContent || '<p>No content available</p>';
+      
+      // Show modal
       modalOverlay.classList.add('active');
-      setTimeout(() => {
-        modal.classList.add('active');
-      }, 10);
-      
-      // Prevent body scrolling when modal is open
-      document.body.style.overflow = 'hidden';
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden'; // Prevent scrolling
     };
     
     // Function to close modal
     const closeModal = () => {
-      if (!modal || !modalOverlay) return;
-      
-      // Hide modal with animation
+      modalOverlay.classList.remove('active');
       modal.classList.remove('active');
-      
-      setTimeout(() => {
-        modalOverlay.classList.remove('active');
-        // Clear modal content
-        if (modalBody) modalBody.innerHTML = '';
-        // Re-enable body scrolling
-        document.body.style.overflow = '';
-      }, 300);
+      document.body.style.overflow = ''; // Allow scrolling again
     };
     
-    // Add click event to Read More buttons
-    if (readMoreButtons) {
-      readMoreButtons.forEach(button => {
-        button.addEventListener('click', () => {
-          const platform = button.getAttribute('data-platform') || 'blog';
-          const postId = button.getAttribute('data-post-id') || button.getAttribute('data-blog-id');
-          if (postId) openModal(postId, platform);
-        });
+    // Add click event listeners to all Read More buttons
+    readMoreButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const postId = button.getAttribute('data-post-id') || button.getAttribute('data-blog-id');
+        const platform = button.getAttribute('data-platform') || 'blog';
+        openModal(postId, platform);
       });
-    }
-    
-    // Add click events to close modal
-    if (modalClose) {
-      modalClose.addEventListener('click', closeModal);
-    }
-    
-    if (modalOverlay) {
-      modalOverlay.addEventListener('click', (event) => {
-        if (event.target === modalOverlay) closeModal();
-      });
-    }
-    
-    // Add keyboard event to close modal with Escape key
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') closeModal();
     });
     
-    return () => {
-      // Clean up event listeners
-      lazyLoadElements.forEach(el => {
-        observer.unobserve(el);
-      });
-      
-      if (readMoreButtons) {
-        readMoreButtons.forEach(button => {
-          button.removeEventListener('click', () => {});
+    // Close modal when clicking the close button
+    modalClose.addEventListener('click', closeModal);
+    
+    // Close modal when clicking outside the modal content
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) {
+        closeModal();
+      }
+    });
+    
+    // Close modal when pressing Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+    });
+  };
+  
+  const setupLazyLoadAnimations = () => {
+    const lazyLoadElements = document.querySelectorAll('.lazy-load');
+    
+    if ('IntersectionObserver' in window) {
+      const lazyLoadObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const element = entry.target;
+            element.classList.add('visible');
+            observer.unobserve(element);
+          }
         });
-      }
-      
-      if (modalClose) {
-        modalClose.removeEventListener('click', closeModal);
-      }
-      
-      if (modalOverlay) {
-        modalOverlay.removeEventListener('click', () => {});
-      }
-      
-      document.removeEventListener('keydown', () => {});
-    };
-  }, [getContentValue]);
+      }, { rootMargin: '0px 0px -50px 0px', threshold: 0.1 });
+
+      lazyLoadElements.forEach(element => {
+        lazyLoadObserver.observe(element);
+      });
+    } else {
+      // Fallback for browsers that don't support IntersectionObserver
+      lazyLoadElements.forEach(element => {
+        element.classList.add('visible');
+      });
+    }
+  };
 
   return (
     <>

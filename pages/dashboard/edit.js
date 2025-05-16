@@ -1511,10 +1511,10 @@ export default function EditContent() {
               </div>
             </div>
             
-            {/* Text Color */}
+            {/* Body Text Color */}
             <div className="mb-4">
               <label className="block font-medium text-gray-700 mb-1" htmlFor="text_color">
-                Text Color
+                Body Text Color
               </label>
               <div className="flex items-center">
                 <input
@@ -1530,6 +1530,56 @@ export default function EditContent() {
                   value={formData.text_color || '#333333'}
                   onChange={handleChange}
                   name="text_color"
+                  className="ml-2 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="#RRGGBB"
+                />
+              </div>
+            </div>
+            
+            {/* Heading Text Color */}
+            <div className="mb-4">
+              <label className="block font-medium text-gray-700 mb-1" htmlFor="heading_color">
+                Heading Text Color
+              </label>
+              <div className="flex items-center">
+                <input
+                  type="color"
+                  id="heading_color"
+                  name="heading_color"
+                  value={formData.heading_color || '#222222'}
+                  onChange={handleChange}
+                  className="h-8 w-8 rounded-md border border-gray-300 shadow-sm"
+                />
+                <input
+                  type="text"
+                  value={formData.heading_color || '#222222'}
+                  onChange={handleChange}
+                  name="heading_color"
+                  className="ml-2 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="#RRGGBB"
+                />
+              </div>
+            </div>
+            
+            {/* Title Text Color */}
+            <div className="mb-4">
+              <label className="block font-medium text-gray-700 mb-1" htmlFor="title_color">
+                Title Text Color
+              </label>
+              <div className="flex items-center">
+                <input
+                  type="color"
+                  id="title_color"
+                  name="title_color"
+                  value={formData.title_color || formData.primary_color || '#3498db'}
+                  onChange={handleChange}
+                  className="h-8 w-8 rounded-md border border-gray-300 shadow-sm"
+                />
+                <input
+                  type="text"
+                  value={formData.title_color || formData.primary_color || '#3498db'}
+                  onChange={handleChange}
+                  name="title_color"
                   className="ml-2 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   placeholder="#RRGGBB"
                 />
@@ -1562,7 +1612,19 @@ export default function EditContent() {
                   className="h-16 w-16 rounded-md shadow-md flex items-center justify-center border border-gray-200" 
                   style={{ backgroundColor: '#ffffff', color: formData.text_color || '#333333' }}
                 >
-                  <span className="text-xs font-bold">Text</span>
+                  <span className="text-xs font-bold">Body</span>
+                </div>
+                <div 
+                  className="h-16 w-16 rounded-md shadow-md flex items-center justify-center border border-gray-200" 
+                  style={{ backgroundColor: '#ffffff', color: formData.heading_color || '#222222' }}
+                >
+                  <span className="text-xs font-bold">Heading</span>
+                </div>
+                <div 
+                  className="h-16 w-16 rounded-md shadow-md flex items-center justify-center border border-gray-200" 
+                  style={{ backgroundColor: '#ffffff', color: formData.title_color || formData.primary_color || '#3498db' }}
+                >
+                  <span className="text-xs font-bold">Title</span>
                 </div>
               </div>
             </div>
