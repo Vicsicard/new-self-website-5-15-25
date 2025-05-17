@@ -12,6 +12,8 @@ export default function EditContent() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [creatingWebsite, setCreatingWebsite] = useState(false);
+  const [websiteCreated, setWebsiteCreated] = useState(false);
   const [error, setError] = useState('');
   const [showColorSuggestions, setShowColorSuggestions] = useState(false);
   const [colorPalettes, setColorPalettes] = useState([]);
@@ -84,6 +86,52 @@ export default function EditContent() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Handle website creation (revalidation)
+  const handleCreateWebsite = async () => {
+    setCreatingWebsite(true);
+    setWebsiteCreated(false);
+    setError('');
+
+    try {
+      // Get project ID from URL query, current project, or user's assigned project
+      const projectId = router.query.id || project?.projectId || user?.projectId;
+      
+      if (!projectId) {
+        throw new Error('No project ID available');
+      }
+      
+      console.log('Creating website for project:', projectId);
+      
+      // Call the revalidate API to regenerate the static page
+      const res = await fetch('/api/revalidate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ path: `/${projectId}` }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        console.error('Server error response:', errorData);
+        throw new Error(`Failed to create website: ${errorData.message || res.statusText}`);
+      }
+
+      const responseData = await res.json();
+      console.log('Website creation response:', responseData);
+      
+      setWebsiteCreated(true);
+      
+      // Open the website in a new tab
+      window.open(`/${projectId}`, '_blank');
+    } catch (err) {
+      console.error('Error creating website:', err);
+      setError(`Failed to create website: ${err.message}`);
+    } finally {
+      setCreatingWebsite(false);
+    }
   };
 
   // Handle form submission
