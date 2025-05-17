@@ -1895,12 +1895,8 @@ export async function getStaticProps({ params }) {
     const cacheBuster = `?nocache=${Date.now()}`;
     console.log(`[getStaticProps] Using cache buster: ${cacheBuster}`);
     
-    // Find project data with explicit options to avoid caching
-    const project = await Project.findByProjectId(db, projectId, {
-      // Adding options to ensure fresh data
-      noCursorTimeout: true,
-      maxTimeMS: 30000 // 30 seconds timeout
-    });
+    // Find project data with a timestamp to avoid caching but without options that aren't supported in this Atlas tier
+    const project = await Project.findByProjectId(db, projectId);
     
     // Log the project content for debugging
     if (project && project.content) {
