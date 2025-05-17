@@ -287,8 +287,8 @@ export default function EditContent() {
         throw new Error('No project ID available');
       }
       
-      console.log('Saving project with ID:', projectId);
-      console.log('Form data keys:', Object.keys(formData).length);
+      console.log('[Text Save] Saving project with ID:', projectId);
+      console.log('[Text Save] Form data keys:', Object.keys(formData).length);
       
       // Convert form data back to content array
       // This is critical - we need valid key/value pairs for all content
@@ -299,9 +299,9 @@ export default function EditContent() {
           value: value || '' // Ensure value is never undefined
         }));
       
-      console.log('Content array to save, length:', content.length);
+      console.log('[Text Save] Content array to save, length:', content.length);
       if (content.length > 0) {
-        console.log('Sample items:', JSON.stringify(content.slice(0, 3)));
+        console.log('[Text Save] Sample items:', JSON.stringify(content.slice(0, 3)));
       }
       
       // Validate that we have content to save
@@ -312,12 +312,12 @@ export default function EditContent() {
       // Important: Ensure we're not losing any fields from the original content
       if (project?.content && Array.isArray(project.content) && 
           project.content.length > 0 && content.length < project.content.length) {
-        console.warn(`Warning: Original content had ${project.content.length} items but new content only has ${content.length} items`);
+        console.warn(`[Text Save] Warning: Original content had ${project.content.length} items but new content only has ${content.length} items`);
       }
       
       // Send update to API with proper error handling
-      console.log(`Sending PUT request to /api/projects/${projectId}`);
-      console.log('Content being sent to server:', JSON.stringify(content.slice(0, 5)) + '... (truncated)');
+      console.log(`[Text Save] Sending PUT request to /api/projects/${projectId}`);
+      console.log('[Text Save] Content being sent to server:', JSON.stringify(content.slice(0, 5)) + '... (truncated)');
       
       // Create the complete payload object
       const payload = { content };
@@ -327,7 +327,7 @@ export default function EditContent() {
         throw new Error('Invalid content payload created');
       }
       
-      console.log(`Payload has content array with ${payload.content.length} items`);
+      console.log(`[Text Save] Payload has content array with ${payload.content.length} items`);
       
       let res;
       try {
@@ -340,19 +340,19 @@ export default function EditContent() {
           credentials: 'include' // Include cookies for authentication
         });
       } catch (fetchError) {
-        console.error('Network error during fetch:', fetchError);
+        console.error('[Text Save] Network error during fetch:', fetchError);
         throw new Error(`Network error: ${fetchError.message}`);
       }
 
-      console.log('Response status:', res.status);
+      console.log('[Text Save] Response status:', res.status);
       
       // Get the response text for better debugging
       let responseText;
       try {
         responseText = await res.text();
-        console.log('Response text:', responseText);
+        console.log('[Text Save] Response text:', responseText);
       } catch (textError) {
-        console.error('Error getting response text:', textError);
+        console.error('[Text Save] Error getting response text:', textError);
         responseText = 'Could not read response text';
       }
       
@@ -364,35 +364,16 @@ export default function EditContent() {
       try {
         // Parse the JSON if possible
         responseData = JSON.parse(responseText);
-        console.log('Save response:', responseData);
+        console.log('[Text Save] Save response:', responseData);
       } catch (jsonError) {
-        console.warn('Could not parse response as JSON:', jsonError);
+        console.warn('[Text Save] Could not parse response as JSON:', jsonError);
       }
       
       // Set save as successful
       setSaveSuccess(true);
       
       // Update our local state with the saved content values
-      // This is better than refetching because it ensures we keep the current state
-      // without any risk of reverting to old values
-      console.log('Updating local state with saved content');
-      
-      // Check for specific color fields that need to be explicitly preserved
-      const colorFields = [
-        'primary_color',
-        'secondary_color',
-        'accent_color',
-        'text_color',
-        'heading_color',
-        'title_color',
-        'background_color'
-      ];
-      
-      // Log current color values (before any potential refresh)
-      console.log('Current color values in form data:');
-      colorFields.forEach(field => {
-        console.log(`${field}: ${formData[field]}`);
-      });
+      console.log('[Text Save] Updating local state with saved content');
       
       // Don't refetch immediately after save - it could cause race conditions
       // Instead, update the project object with our successfully saved content
@@ -403,14 +384,37 @@ export default function EditContent() {
           updatedAt: new Date().toISOString()
         };
         setProject(updatedProject);
-        console.log('Local project data updated successfully');
+        console.log('[Text Save] Local project data updated successfully');
+      }
+      
+      // CRITICAL FIX: Automatically trigger a revalidation for the site after text content save
+      // This ensures text changes appear on the site immediately without manual revalidation
+      try {
+        console.log(`[Text Save] Automatically triggering revalidation for /${projectId}`);
+        const revalidateRes = await fetch('/api/revalidate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ path: `/${projectId}` }),
+          credentials: 'include'
+        });
+        
+        if (revalidateRes.ok) {
+          console.log('[Text Save] Revalidation triggered successfully after text save');
+        } else {
+          console.warn('[Text Save] Revalidation after text save returned non-OK response:', await revalidateRes.text());
+        }
+      } catch (revalidateErr) {
+        console.error('[Text Save] Error triggering revalidation after text save:', revalidateErr);
+        // Don't throw this error - we want to show success for the save itself
+        // even if the revalidation fails
       }
       
       // Show success message but don't redirect anywhere
       // We want users to stay on the edit page to keep making changes
-      // or to click the "Create Website" button
     } catch (err) {
-      console.error('Error updating project:', err);
+      console.error('[Text Save] Error updating project:', err);
       setError(`Failed to save changes: ${err.message}`);
     } finally {
       setSaving(false);
