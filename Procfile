@@ -1,2 +1,2 @@
-web: npm start
-worker: npm run keep-alive
+web: yarn start
+worker: yarn run keep-alive

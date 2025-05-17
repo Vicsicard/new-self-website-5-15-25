@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node server.js",
+    "start:next": "next start",
     "lint": "next lint",
     "init-admin": "node scripts/init-admin.js",
     "keep-alive": "node scripts/keep-alive.js"
