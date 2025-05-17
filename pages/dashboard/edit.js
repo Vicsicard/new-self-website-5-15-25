@@ -180,6 +180,18 @@ export default function EditContent() {
       
       // Send update to API with proper error handling
       console.log(`Sending PUT request to /api/projects/${projectId}`);
+      console.log('Content being sent to server:', JSON.stringify(content.slice(0, 5)) + '... (truncated)');
+      
+      // Create the complete payload object
+      const payload = { content };
+      
+      // Verify payload before sending
+      if (!payload.content || !Array.isArray(payload.content) || payload.content.length === 0) {
+        throw new Error('Invalid content payload created');
+      }
+      
+      console.log(`Payload has content array with ${payload.content.length} items`);
+      
       let res;
       try {
         res = await fetch(`/api/projects/${projectId}`, {
@@ -187,7 +199,7 @@ export default function EditContent() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ content }), // Send just the content array
+          body: JSON.stringify(payload),
           credentials: 'include' // Include cookies for authentication
         });
       } catch (fetchError) {
@@ -223,31 +235,38 @@ export default function EditContent() {
       // Set save as successful
       setSaveSuccess(true);
       
-      // Refetch the project to ensure we have the latest data
-      if (user) {
-        console.log('Refetching project data after save');
-        try {
-          const refreshRes = await fetch(`/api/projects/${projectId}`);
-          if (refreshRes.ok) {
-            const refreshData = await refreshRes.json();
-            setProject(refreshData.project);
-            
-            // Update form data with the refreshed content
-            const refreshedFormData = {};
-            if (refreshData.project.content && Array.isArray(refreshData.project.content)) {
-              refreshData.project.content.forEach(item => {
-                if (item && item.key) {
-                  refreshedFormData[item.key] = item.value || '';
-                }
-              });
-            }
-            setFormData(refreshedFormData);
-            console.log('Project data refreshed successfully');
-          }
-        } catch (refreshErr) {
-          console.error('Error refreshing project data:', refreshErr);
-          // Don't fail the whole save operation just because refresh failed
-        }
+      // Update our local state with the saved content values
+      // This is better than refetching because it ensures we keep the current state
+      // without any risk of reverting to old values
+      console.log('Updating local state with saved content');
+      
+      // Check for specific color fields that need to be explicitly preserved
+      const colorFields = [
+        'primary_color',
+        'secondary_color',
+        'accent_color',
+        'text_color',
+        'heading_color',
+        'title_color',
+        'background_color'
+      ];
+      
+      // Log current color values (before any potential refresh)
+      console.log('Current color values in form data:');
+      colorFields.forEach(field => {
+        console.log(`${field}: ${formData[field]}`);
+      });
+      
+      // Don't refetch immediately after save - it could cause race conditions
+      // Instead, update the project object with our successfully saved content
+      if (project) {
+        const updatedProject = {
+          ...project,
+          content: content,
+          updatedAt: new Date().toISOString()
+        };
+        setProject(updatedProject);
+        console.log('Local project data updated successfully');
       }
       
       // Show success message but don't redirect anywhere

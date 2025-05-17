@@ -55,7 +55,12 @@ async function handler(req, res) {
       
       console.log('Authorization passed: User has permission to edit this project');
       
+      // Debug the full request body
+      console.log('Full request body:', JSON.stringify(req.body));
+      
+      // Extract content with explicit logging
       const { name, content } = req.body;
+      console.log('Extracted content from request body:', content ? `Found ${Array.isArray(content) ? content.length : 'non-array'}` : 'undefined');
       
       // Validate content array
       if (!content) {
@@ -80,6 +85,21 @@ async function handler(req, res) {
       
       // Only update content if it's provided and valid
       if (content && Array.isArray(content)) {
+        // Debug each content item
+        if (content.length > 0) {
+          // Log some sample items for debugging
+          const sampleItems = content.slice(0, 3);
+          console.log('Sample content items:', JSON.stringify(sampleItems, null, 2));
+          
+          // Check specifically for color values
+          const colorItems = content.filter(item => 
+            item && item.key && (item.key.includes('color') || item.key.includes('_style'))
+          );
+          if (colorItems.length > 0) {
+            console.log('Color-related fields:', JSON.stringify(colorItems, null, 2));
+          }
+        }
+        
         // Filter out invalid content items
         const validContent = content.filter(item => 
           item && typeof item === 'object' && item.key && item.key.trim() !== ''
