@@ -45,17 +45,48 @@ export default class Project {
   }
   
   static async update(db, projectId, { name, content }) {
-    const updateData = {
-      updatedAt: new Date()
-    };
-    
-    if (name) updateData.name = name;
-    if (content) updateData.content = content;
-    
-    return await db.collection('projects').updateOne(
-      { projectId },
-      { $set: updateData }
-    );
+    try {
+      console.log(`[DB] Updating project ${projectId}`, { contentLength: content?.length });
+      
+      // Build update data
+      const updateData = {
+        updatedAt: new Date()
+      };
+      
+      if (name) updateData.name = name;
+      if (content) {
+        console.log(`[DB] Setting content with ${content.length} items`);
+        updateData.content = content;
+      } else {
+        console.log('[DB] Warning: No content provided for update');
+      }
+      
+      // Log update operation
+      console.log(`[DB] Performing update operation on project: ${projectId}`);
+      console.log(`[DB] Update data has ${Object.keys(updateData).length} fields`);
+      
+      // Perform the update
+      const result = await db.collection('projects').updateOne(
+        { projectId },
+        { $set: updateData }
+      );
+      
+      // Log update results
+      console.log(`[DB] Update result: matched=${result.matchedCount}, modified=${result.modifiedCount}`);
+      
+      if (result.matchedCount === 0) {
+        console.error(`[DB] Error: No project found with projectId ${projectId}`);
+      }
+      
+      if (result.matchedCount > 0 && result.modifiedCount === 0) {
+        console.warn(`[DB] Warning: Project found but no modifications made`);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('[DB] Error in Project.update:', error);
+      throw error; // Rethrow to handle at API level
+    }
   }
   
   static async updateContent(db, projectId, content) {

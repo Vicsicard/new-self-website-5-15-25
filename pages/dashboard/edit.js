@@ -139,6 +139,7 @@ export default function EditContent() {
     e.preventDefault();
     setSaving(true);
     setSaveSuccess(false);
+    setWebsiteCreated(false); // Reset website creation status
     setError('');
 
     try {
@@ -150,9 +151,10 @@ export default function EditContent() {
       }
       
       console.log('Saving project with ID:', projectId);
-      console.log('Form data to save:', formData);
+      console.log('Form data keys:', Object.keys(formData).length);
       
       // Convert form data back to content array
+      // This is critical - we need valid key/value pairs for all content
       const content = Object.entries(formData)
         .filter(([key, value]) => key && key.trim() !== '') // Filter out empty keys
         .map(([key, value]) => ({ 
@@ -160,35 +162,97 @@ export default function EditContent() {
           value: value || '' // Ensure value is never undefined
         }));
       
-      console.log('Content array to save:', content);
+      console.log('Content array to save, length:', content.length);
+      if (content.length > 0) {
+        console.log('Sample items:', JSON.stringify(content.slice(0, 3)));
+      }
       
-      // Send update to API
-      const res = await fetch(`/api/projects/${projectId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ content }),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        console.error('Server error response:', errorData);
-        throw new Error(`Failed to update project: ${errorData.message || res.statusText}`);
+      // Validate that we have content to save
+      if (!content || content.length === 0) {
+        throw new Error('No content to save. Form data may be empty.');
+      }
+      
+      // Important: Ensure we're not losing any fields from the original content
+      if (project?.content && Array.isArray(project.content) && 
+          project.content.length > 0 && content.length < project.content.length) {
+        console.warn(`Warning: Original content had ${project.content.length} items but new content only has ${content.length} items`);
+      }
+      
+      // Send update to API with proper error handling
+      console.log(`Sending PUT request to /api/projects/${projectId}`);
+      let res;
+      try {
+        res = await fetch(`/api/projects/${projectId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ content }), // Send just the content array
+          credentials: 'include' // Include cookies for authentication
+        });
+      } catch (fetchError) {
+        console.error('Network error during fetch:', fetchError);
+        throw new Error(`Network error: ${fetchError.message}`);
       }
 
-      const responseData = await res.json();
-      console.log('Save response:', responseData);
+      console.log('Response status:', res.status);
       
+      // Get the response text for better debugging
+      let responseText;
+      try {
+        responseText = await res.text();
+        console.log('Response text:', responseText);
+      } catch (textError) {
+        console.error('Error getting response text:', textError);
+        responseText = 'Could not read response text';
+      }
+      
+      if (!res.ok) {
+        throw new Error(`Failed to update project: Status ${res.status} - ${responseText}`);
+      }
+
+      let responseData;
+      try {
+        // Parse the JSON if possible
+        responseData = JSON.parse(responseText);
+        console.log('Save response:', responseData);
+      } catch (jsonError) {
+        console.warn('Could not parse response as JSON:', jsonError);
+      }
+      
+      // Set save as successful
       setSaveSuccess(true);
       
-      // Add a small delay to show success message
-      setTimeout(() => {
-        // If admin user, redirect back to dashboard after save
-        if (user?.role === 'admin') {
-          router.push('/dashboard');
+      // Refetch the project to ensure we have the latest data
+      if (user) {
+        console.log('Refetching project data after save');
+        try {
+          const refreshRes = await fetch(`/api/projects/${projectId}`);
+          if (refreshRes.ok) {
+            const refreshData = await refreshRes.json();
+            setProject(refreshData.project);
+            
+            // Update form data with the refreshed content
+            const refreshedFormData = {};
+            if (refreshData.project.content && Array.isArray(refreshData.project.content)) {
+              refreshData.project.content.forEach(item => {
+                if (item && item.key) {
+                  refreshedFormData[item.key] = item.value || '';
+                }
+              });
+            }
+            setFormData(refreshedFormData);
+            console.log('Project data refreshed successfully');
+          }
+        } catch (refreshErr) {
+          console.error('Error refreshing project data:', refreshErr);
+          // Don't fail the whole save operation just because refresh failed
         }
-      }, 2000);
+      }
+      
+      // Show success message but don't redirect anywhere
+      // We want users to stay on the edit page to keep making changes
+      // or to click the "Create Website" button
     } catch (err) {
       console.error('Error updating project:', err);
       setError(`Failed to save changes: ${err.message}`);
