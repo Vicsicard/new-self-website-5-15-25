@@ -147,6 +147,51 @@ export default function EditContent() {
       
       console.log('Creating website for project:', projectId);
       
+      // Before revalidating, ensure all color values are properly saved
+      // by using our specialized endpoint to save any unsaved color values
+      const colorFields = [
+        'primary_color',
+        'secondary_color',
+        'accent_color',
+        'text_color',
+        'heading_color',
+        'title_color',
+        'background_color'
+      ];
+      
+      // Save all current color values to ensure they're up to date
+      const colorValues = {};
+      colorFields.forEach(field => {
+        if (formData[field]) {
+          colorValues[field] = formData[field];
+        }
+      });
+      
+      if (Object.keys(colorValues).length > 0) {
+        console.log('Saving all color values before revalidation:', colorValues);
+        
+        try {
+          const colorSaveRes = await fetch(`/api/projects/${projectId}/save-colors`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              colors: colorValues
+            }),
+            credentials: 'include'
+          });
+          
+          if (!colorSaveRes.ok) {
+            console.warn('Could not save colors before revalidation');
+          } else {
+            console.log('Colors successfully saved before revalidation');
+          }
+        } catch (colorErr) {
+          console.warn('Error saving colors before revalidation:', colorErr);
+        }
+      }
+      
       // Call the revalidate API to regenerate the static page
       const res = await fetch('/api/revalidate', {
         method: 'POST',
@@ -154,16 +199,22 @@ export default function EditContent() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ path: `/${projectId}` }),
+        credentials: 'include'
       });
 
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        console.error('Server error response:', errorData);
-        throw new Error(`Failed to create website: ${errorData.message || res.statusText}`);
+        const errorText = await res.text();
+        console.error('Server error response:', errorText);
+        throw new Error(`Failed to create website: ${errorText}`);
       }
 
-      const responseData = await res.json();
-      console.log('Website creation response:', responseData);
+      let responseData;
+      try {
+        responseData = await res.json();
+        console.log('Website creation response:', responseData);
+      } catch (jsonErr) {
+        console.warn('Could not parse revalidation response as JSON:', jsonErr);
+      }
       
       setWebsiteCreated(true);
       
