@@ -18,6 +18,8 @@ export default function EditContent() {
   const [showColorSuggestions, setShowColorSuggestions] = useState(false);
   const [colorPalettes, setColorPalettes] = useState([]);
   const [selectedPaletteIndex, setSelectedPaletteIndex] = useState(null);
+  const [colorSaved, setColorSaved] = useState(false);
+  const [lastSavedColor, setLastSavedColor] = useState('');
   const { user, isAuthenticated, loading: authLoading } = useContext(AuthContext);
   const router = useRouter();
 
@@ -126,6 +128,46 @@ export default function EditContent() {
       
       const responseData = await res.json();
       console.log('Color save response:', responseData);
+      
+      // Update the project object with the new color value
+      if (project && project.content && Array.isArray(project.content)) {
+        // Find and update the color in the project content array
+        const updatedContent = project.content.map(item => {
+          if (item.key === colorKey) {
+            return { ...item, value: colorValue };
+          }
+          return item;
+        });
+        
+        // If the color wasn't found in the content array, add it
+        if (!updatedContent.some(item => item.key === colorKey)) {
+          updatedContent.push({ key: colorKey, value: colorValue });
+        }
+        
+        // Update the project object with the new content
+        setProject({
+          ...project,
+          content: updatedContent
+        });
+        
+        console.log(`Updated local project state with color ${colorKey}=${colorValue}`);
+      }
+      
+      // Ensure formData is updated with the new color value
+      setFormData(prev => ({
+        ...prev,
+        [colorKey]: colorValue
+      }));
+      
+      // Show the color saved indicator
+      setColorSaved(true);
+      setLastSavedColor(colorKey);
+      
+      // Hide the indicator after 3 seconds
+      setTimeout(() => {
+        setColorSaved(false);
+      }, 3000);
+      
     } catch (err) {
       console.error('Error saving color:', err);
     }
@@ -227,6 +269,7 @@ export default function EditContent() {
       setCreatingWebsite(false);
     }
   };
+
 
   // Handle form submission
   const handleSubmit = async (e) => {
@@ -628,6 +671,19 @@ export default function EditContent() {
               )}
             </div>
           </div>
+        </div>
+        
+        {/* Color settings section */}
+        <div className={`mt-8 form-section ${activeSection === 'colors' ? 'block' : 'hidden'}`}>
+          <h2 className="text-xl font-semibold mb-4">Colors</h2>
+          
+          {/* Color save indicator */}
+          {colorSaved && (
+            <div className="mb-4 p-2 bg-green-100 text-green-800 rounded-md flex items-center">
+              <FaCheck className="mr-2" />
+              <span>Color {lastSavedColor.replace('_', ' ')} saved successfully!</span>
+            </div>
+          )}
         </div>
         
         {/* Blog Posts Section */}
@@ -2347,11 +2403,26 @@ export default function EditContent() {
               <button
                 type="submit"
                 disabled={saving}
-                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 mr-4"
               >
                 {saving ? 'Saving...' : 'Save Changes'}
               </button>
+              <button
+                type="button"
+                onClick={handleCreateWebsite}
+                disabled={creatingWebsite}
+                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+              >
+                {creatingWebsite ? 'Creating...' : 'Update & View Site'}
+              </button>
             </div>
+            
+            {/* Website creation success message */}
+            {websiteCreated && (
+              <div className="mt-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
+                <p>Website updated successfully! The site will open in a new tab.</p>
+              </div>
+            )}
           </form>
         ) : (
           <div className="text-center py-8">
