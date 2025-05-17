@@ -86,6 +86,49 @@ export default function EditContent() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Check if this is a color field change and save it immediately 
+    if (name.includes('color')) {
+      saveColorChange(name, value);
+    }
+  };
+  
+  // Special function to save color changes directly to ensure they're properly saved
+  const saveColorChange = async (colorKey, colorValue) => {
+    try {
+      // Get project ID from URL query, current project, or user's assigned project
+      const projectId = router.query.id || project?.projectId || user?.projectId;
+      
+      if (!projectId) {
+        console.error('No project ID available for color save');
+        return;
+      }
+      
+      console.log(`Saving color change: ${colorKey} = ${colorValue}`);
+      
+      // Use the specialized endpoint for color saves
+      const res = await fetch(`/api/projects/${projectId}/save-colors`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          colors: { [colorKey]: colorValue }
+        }),
+        credentials: 'include' // Include cookies for authentication
+      });
+      
+      if (!res.ok) {
+        const responseText = await res.text();
+        console.error(`Failed to save color: ${responseText}`);
+        return;
+      }
+      
+      const responseData = await res.json();
+      console.log('Color save response:', responseData);
+    } catch (err) {
+      console.error('Error saving color:', err);
+    }
   };
 
   // Handle website creation (revalidation)
