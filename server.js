@@ -72,9 +72,24 @@ app.prepare().then(() => {
     try {
       // Parse the URL
       const parsedUrl = parse(req.url, true);
+
+      // Special handling for revalidation API in production
+      if (process.env.NODE_ENV === 'production' && req.url.startsWith('/api/revalidate')) {
+        console.log('[Revalidation] Received revalidation request:', req.url);
+        
+        // Add additional headers/logging for debugging revalidation in production
+        req.headers['x-revalidation-source'] = 'custom-server';
+        console.log('[Revalidation] Request method:', req.method);
+        console.log('[Revalidation] Request headers:', req.headers);
+      }
       
       // Let Next.js handle the request
       await handle(req, res, parsedUrl);
+      
+      // Log successful revalidation if applicable
+      if (process.env.NODE_ENV === 'production' && req.url.startsWith('/api/revalidate') && res.statusCode === 200) {
+        console.log('[Revalidation] Successfully processed revalidation request');
+      }
     } catch (err) {
       console.error('Error occurred handling', req.url, err);
       res.statusCode = 500;
