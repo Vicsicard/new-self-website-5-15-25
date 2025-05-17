@@ -18,8 +18,9 @@ Project Schema:
 */
 
 export default class Project {
-  static async findByProjectId(db, projectId) {
-    return await db.collection('projects').findOne({ projectId });
+  static async findByProjectId(db, projectId, options = {}) {
+    console.log(`[DB] Finding project by ID: ${projectId} with fresh query at ${new Date().toISOString()}`); 
+    return await db.collection('projects').findOne({ projectId }, options);
   }
   
   static async findById(db, id) {

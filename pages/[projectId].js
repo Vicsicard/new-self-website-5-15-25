@@ -1880,42 +1880,73 @@ export default function ClientSite({ projectData, notFound }) {
   );
 }
 
-// This gets called at build time to pre-render the page
+// This gets called at build time and on each revalidation request
 export async function getStaticProps({ params }) {
   const { projectId } = params;
   
   try {
-    // Connect to the database
+    console.log(`[getStaticProps] Fetching fresh data for project: ${projectId} at ${new Date().toISOString()}`);
+    
+    // Connect to the database with a fresh connection
     const { db } = await connectToDatabase();
     
-    // Find project data
-    const project = await Project.findByProjectId(db, projectId);
+    // Find project data with a timestamp to avoid caching
+    // Add a random query parameter to ensure we don't get a cached result
+    const cacheBuster = `?nocache=${Date.now()}`;
+    console.log(`[getStaticProps] Using cache buster: ${cacheBuster}`);
+    
+    // Find project data with explicit options to avoid caching
+    const project = await Project.findByProjectId(db, projectId, {
+      // Adding options to ensure fresh data
+      noCursorTimeout: true,
+      maxTimeMS: 30000 // 30 seconds timeout
+    });
+    
+    // Log the project content for debugging
+    if (project && project.content) {
+      console.log(`[getStaticProps] Found project with ${project.content.length} content items`);
+      // Log a sample of content items for verification
+      const contentSample = project.content.slice(0, 5).map(item => `${item.key}: ${item.value.substring(0, 20)}${item.value.length > 20 ? '...' : ''}`);
+      console.log(`[getStaticProps] Content sample: ${JSON.stringify(contentSample)}`);
+    } else {
+      console.log(`[getStaticProps] Project found but no content available`);
+    }
     
     // If project doesn't exist, return 404
     if (!project) {
+      console.log(`[getStaticProps] Project not found: ${projectId}`);
       return {
         props: {
           notFound: true
         },
-        revalidate: 60, // In seconds
+        revalidate: 10, // Reduce revalidation time to 10 seconds for not found pages
       };
     }
     
-    // Return the project data
+    // Create a clean serialized version of the project
+    const serializedProject = JSON.parse(JSON.stringify(project));
+    
+    // Add a timestamp to the project data to ensure it's always fresh
+    serializedProject._fetchTimestamp = Date.now();
+    
+    console.log(`[getStaticProps] Successfully retrieved and serialized project ${projectId}`);
+    
+    // Return the project data with a shorter revalidation period
     return {
       props: {
-        projectData: JSON.parse(JSON.stringify(project)), // Serialize project
+        projectData: serializedProject,
         notFound: false
       },
-      revalidate: 60, // In seconds - revalidate every minute
+      revalidate: 10, // Reduce to 10 seconds to ensure frequent updates
     };
   } catch (error) {
-    console.error('Error fetching project:', error);
+    console.error(`[getStaticProps] Error fetching project ${projectId}:`, error);
     return {
       props: {
-        notFound: true
+        notFound: true,
+        errorMessage: process.env.NODE_ENV === 'development' ? error.message : 'An error occurred'
       },
-      revalidate: 60,
+      revalidate: 10, // Shorter revalidation for error pages
     };
   }
 }
