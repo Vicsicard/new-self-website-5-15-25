@@ -1,4 +1,6 @@
 import withAuth from '../../middleware/withAuth';
+import { connectToDatabase } from '../../lib/db';
+import Project from '../../models/Project';
 
 async function handler(req, res) {
   // Only allow POST requests
@@ -31,28 +33,62 @@ async function handler(req, res) {
       const fullUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}${path}`;
       console.log(`[Revalidation] Attempting to regenerate: ${fullUrl}`);
       
-      // Force a full revalidation of the page
-      await res.revalidate(path);
+      // Force a DB touch to ensure we have the most recent data
+      // This updates the updatedAt timestamp without changing data
+      try {
+        const projectId = path.replace(/^\//g, ''); // Remove leading slash if present
+        const { db } = await connectToDatabase();
+        
+        // Touch the project to update its timestamp
+        const touchResult = await db.collection('projects').updateOne(
+          { projectId: projectId },
+          { $set: { touchedAt: new Date() } }
+        );
+        
+        console.log(`[Revalidation] Touched project ${projectId} in database:`, 
+          touchResult.matchedCount ? 'Found and updated' : 'Not found');
+      } catch (dbError) {
+        console.error('[Revalidation] DB touch error:', dbError);
+        // Continue even if this fails - it's just an extra step
+      }
       
-      // Additional step: Manually fetch the page to ensure fresh content
-      if (process.env.NODE_ENV === 'production') {
-        try {
-          const fetchOptions = { 
-            method: 'GET',
-            headers: { 
-              'Cache-Control': 'no-cache, no-store, must-revalidate',
-              'Pragma': 'no-cache',
-              'Expires': '0'
-            } 
-          };
-          
-          console.log(`[Revalidation] Making additional fetch to: ${fullUrl}`);
-          await fetch(fullUrl, fetchOptions);
-          console.log('[Revalidation] Additional fetch completed');
-        } catch (fetchErr) {
-          console.log('[Revalidation] Additional fetch error (non-blocking):', fetchErr.message);
-          // Continue even if this fails - it's just an extra precaution
-        }
+      // Force a full revalidation of the page with stronger invalidation
+      try {
+        console.log('[Revalidation] Calling Next.js revalidate function');
+        await res.revalidate(path);
+      } catch (revalidateError) {
+        console.error('[Revalidation] Error during Next.js revalidate call:', revalidateError);
+        // Don't re-throw - try our manual approach anyway
+      }
+      
+      // Sometimes we need a hard refresh - especially in production with CDNs
+      // Attempt manual fetch to multiple cache-busting URLs for the same path
+      const fetchPromises = [];
+      
+      for (let i = 0; i < 3; i++) { // Try multiple variations of cache busters
+        const cacheBuster = `${fullUrl}?nocache=${Date.now()}-${i}`;
+        console.log(`[Revalidation] Fetching with cache buster (${i}):`, cacheBuster);
+        
+        const fetchPromise = fetch(cacheBuster, {
+          method: 'GET',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+            'X-Revalidation-Force': 'true',
+            'X-Revalidation-Attempt': `${i+1}`
+          },
+        }).catch(err => console.error(`[Revalidation] Fetch error for attempt ${i+1}:`, err));
+        
+        fetchPromises.push(fetchPromise);
+      }
+      
+      // Wait for at least some of our fetch attempts to complete
+      try {
+        await Promise.allSettled(fetchPromises);
+        console.log('[Revalidation] All fetch attempts completed or settled');
+      } catch (allErr) {
+        console.error('[Revalidation] Error waiting for fetch attempts:', allErr);
       }
       
       console.log('[Revalidation] Successfully processed revalidation request');
