@@ -10,7 +10,7 @@
     "lint": "next lint",
     "init-admin": "node scripts/init-admin.js",
     "keep-alive": "node scripts/keep-alive.js",
-    "render-build": "npm run build",
+    "render-build": "npm install && npm run build",
     "render-start": "NODE_ENV=production node server.js"
   },
   "dependencies": {
