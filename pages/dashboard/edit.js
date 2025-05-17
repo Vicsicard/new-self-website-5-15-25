@@ -3,6 +3,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import DashboardLayout from '../../components/dashboard/Layout';
 import { AuthContext } from '../_app';
+import { FaLightbulb, FaCheck } from 'react-icons/fa';
 
 export default function EditContent() {
   const [project, setProject] = useState(null);
@@ -12,6 +13,9 @@ export default function EditContent() {
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [showColorSuggestions, setShowColorSuggestions] = useState(false);
+  const [colorPalettes, setColorPalettes] = useState([]);
+  const [selectedPaletteIndex, setSelectedPaletteIndex] = useState(null);
   const { user, isAuthenticated, loading: authLoading } = useContext(AuthContext);
   const router = useRouter();
 
@@ -1459,6 +1463,102 @@ export default function EditContent() {
                   placeholder="#RRGGBB"
                 />
               </div>
+              <div className="mt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    generateColorPalettes();
+                    setShowColorSuggestions(!showColorSuggestions);
+                  }}
+                  className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-white transition-all duration-200 ease-in-out"
+                  style={{
+                    background: `linear-gradient(to right, ${formData.primary_color || '#3498db'}, ${lightenDarkenColor(formData.primary_color || '#3498db', 40)})`
+                  }}
+                >
+                  <FaLightbulb className="mr-2" />
+                  {showColorSuggestions ? 'Hide Color Suggestions' : 'Get Color Suggestions'}
+                </button>
+              </div>
+
+              {/* Add CSS Animation for palette selection */}
+              <style jsx>{`
+                @keyframes palette-applied-flash {
+                  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+                  50% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+                  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+                }
+                .palette-applied-flash {
+                  animation: palette-applied-flash 0.5s ease-out;
+                }
+              `}</style>
+              
+              {/* Color Suggestions Panel */}
+              {showColorSuggestions && colorPalettes.length > 0 && (
+                <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-white shadow-md animate-fadeIn">
+                  <div className="mb-3">
+                    <h4 className="font-medium text-gray-800">Color Psychology</h4>
+                    <p className="text-sm text-gray-600">{getColorPsychology(formData.primary_color || '#3498db')}</p>
+                  </div>
+                  
+                  <h4 className="font-medium text-gray-800 mb-2">Suggested Palettes</h4>
+                  <div className="space-y-4">
+                    {colorPalettes.map((palette, index) => (
+                      <div 
+                        id={`palette-card-${index}`}
+                        key={index} 
+                        className={`border ${selectedPaletteIndex === index ? 'border-2 border-green-500 bg-green-50' : 'border-gray-200'} rounded-md p-3 hover:shadow-md transition-all duration-200`}
+                      >
+                        <div className="flex justify-between items-center mb-2">
+                          <h5 className="font-medium text-gray-700">{palette.name}</h5>
+                          <button
+                            type="button"
+                            onClick={() => applyPalette(palette, index)}
+                            className={`flex items-center px-2 py-1 text-xs font-medium rounded-md text-white ${selectedPaletteIndex === index ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-600 hover:bg-gray-700'} transition-all duration-200`}
+                          >
+                            <FaCheck className="mr-1" /> {selectedPaletteIndex === index ? 'Applied' : 'Apply'}
+                          </button>
+                        </div>
+                        <p className="text-xs text-gray-600 mb-2">{palette.description}</p>
+                        <div className="space-y-2">
+                          <div className="flex space-x-2">
+                            <div 
+                              className="h-12 w-1/3 rounded-md shadow-sm" 
+                              style={{ backgroundColor: palette.primary }}
+                              title="Primary"
+                            />
+                            <div 
+                              className="h-12 w-1/3 rounded-md shadow-sm" 
+                              style={{ backgroundColor: palette.secondary }}
+                              title="Secondary"
+                            />
+                            <div 
+                              className="h-12 w-1/3 rounded-md shadow-sm" 
+                              style={{ backgroundColor: palette.accent }}
+                              title="Accent"
+                            />
+                          </div>
+                          <div className="flex space-x-2">
+                            <div className="flex-1 h-8 flex items-center justify-center rounded" style={{ backgroundColor: '#f8f9fa', color: palette.text_color }}>
+                              <span style={{ color: palette.text_color }} className="text-xs">Text</span>
+                            </div>
+                            <div className="flex-1 h-8 flex items-center justify-center rounded" style={{ backgroundColor: '#f8f9fa', color: palette.heading_color }}>
+                              <span style={{ color: palette.heading_color }} className="text-xs font-bold">Heading</span>
+                            </div>
+                            <div className="flex-1 h-8 flex items-center justify-center rounded" style={{ backgroundColor: '#f8f9fa', color: palette.title_color }}>
+                              <span style={{ color: palette.title_color }} className="text-xs font-bold">Subtitle</span>
+                            </div>
+                          </div>
+                          <div className="flex">
+                            <div className="flex-1 h-8 flex items-center justify-center rounded-md" style={{ backgroundColor: '#2c3e50', color: palette.footer_text_color }}>
+                              <span style={{ color: palette.footer_text_color }} className="text-xs">Footer Text (matches Subtitle)</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             
             {/* Secondary Color */}
@@ -1655,6 +1755,316 @@ export default function EditContent() {
       </DashboardLayout>
     );
   }
+
+  // Convert hex to HSL for easier color manipulation
+  const hexToHSL = (hex) => {
+    // Remove the # if present
+    hex = hex.replace(/#/g, '');
+    
+    // Convert hex to RGB
+    let r = parseInt(hex.substring(0, 2), 16) / 255;
+    let g = parseInt(hex.substring(2, 4), 16) / 255;
+    let b = parseInt(hex.substring(4, 6), 16) / 255;
+    
+    // Find greatest and smallest channel values
+    let cmin = Math.min(r, g, b);
+    let cmax = Math.max(r, g, b);
+    let delta = cmax - cmin;
+    let h = 0;
+    let s = 0;
+    let l = 0;
+
+    // Calculate hue
+    if (delta === 0) {
+      h = 0;
+    } else if (cmax === r) {
+      h = ((g - b) / delta) % 6;
+    } else if (cmax === g) {
+      h = (b - r) / delta + 2;
+    } else {
+      h = (r - g) / delta + 4;
+    }
+
+    h = Math.round(h * 60);
+    if (h < 0) h += 360;
+
+    // Calculate lightness
+    l = (cmax + cmin) / 2;
+
+    // Calculate saturation
+    s = delta === 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+    
+    // Convert to percentages
+    s = +(s * 100).toFixed(1);
+    l = +(l * 100).toFixed(1);
+
+    return { h, s, l };
+  };
+
+  // Convert HSL to hex
+  const hslToHex = (h, s, l) => {
+    s /= 100;
+    l /= 100;
+
+    let c = (1 - Math.abs(2 * l - 1)) * s;
+    let x = c * (1 - Math.abs((h / 60) % 2 - 1));
+    let m = l - c / 2;
+    let r = 0;
+    let g = 0;
+    let b = 0;
+
+    if (0 <= h && h < 60) {
+      r = c; g = x; b = 0;
+    } else if (60 <= h && h < 120) {
+      r = x; g = c; b = 0;
+    } else if (120 <= h && h < 180) {
+      r = 0; g = c; b = x;
+    } else if (180 <= h && h < 240) {
+      r = 0; g = x; b = c;
+    } else if (240 <= h && h < 300) {
+      r = x; g = 0; b = c;
+    } else if (300 <= h && h < 360) {
+      r = c; g = 0; b = x;
+    }
+    
+    // Convert to hex
+    r = Math.round((r + m) * 255).toString(16).padStart(2, '0');
+    g = Math.round((g + m) * 255).toString(16).padStart(2, '0');
+    b = Math.round((b + m) * 255).toString(16).padStart(2, '0');
+
+    return `#${r}${g}${b}`;
+  };
+
+  // Simple function to lighten or darken a color
+  const lightenDarkenColor = (hex, amount) => {
+    const { h, s, l } = hexToHSL(hex);
+    // Adjust lightness but keep within 0-100 range
+    const newL = Math.min(Math.max(l + amount, 0), 100);
+    return hslToHex(h, s, newL);
+  };
+
+  // Get color category and psychological description
+  const getColorPsychology = (hex) => {
+    const { h, s, l } = hexToHSL(hex);
+    
+    // Determine color category based on hue
+    if (h >= 0 && h < 20 || h >= 330 && h <= 360) {
+      return "Your selected red conveys energy and passion. It creates excitement and can evoke strong emotions. Ideal for call-to-action elements and energetic brands.";
+    } else if (h >= 20 && h < 50) {
+      return "Your selected orange blends the energy of red with the cheerfulness of yellow. It represents enthusiasm, creativity, and determination. Great for brands wanting to appear friendly and confident.";
+    } else if (h >= 50 && h < 70) {
+      return "Your selected yellow radiates positivity and optimism. It suggests clarity of thought and intellectual energy. Perfect for brands focused on communication and innovation.";
+    } else if (h >= 70 && h < 150) {
+      return "Your selected green represents growth and harmony. It suggests balance, health, and a connection to nature. Ideal for brands emphasizing wellness, sustainability, or financial stability.";
+    } else if (h >= 150 && h < 210) {
+      return "Your selected blue conveys trust and professionalism. It's calming, reliable, and suggests depth and stability. Perfect for corporate sites or brands emphasizing dependability.";
+    } else if (h >= 210 && h < 270) {
+      return "Your selected purple suggests creativity and wisdom. It combines the stability of blue with the energy of red, often associated with luxury, mystery, and sophistication.";
+    } else if (h >= 270 && h < 330) {
+      return "Your selected pink/magenta conveys nurturing energy, often associated with compassion, understanding, and support. Ideal for brands wanting to appear approachable and caring.";
+    } else {
+      return "This color has a balanced psychological impact, blending multiple emotional responses. Consider how it makes you feel and what you want your visitors to experience.";
+    }
+  };
+
+  // Function to calculate contrast ratio between two colors
+  const getContrastRatio = (color1, color2) => {
+    // Convert colors to RGB format
+    const getRGB = (hex) => {
+      hex = hex.replace(/#/g, '');
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
+      return [r, g, b];
+    };
+
+    // Calculate relative luminance
+    const getLuminance = (rgb) => {
+      const [r, g, b] = rgb.map(v => {
+        v /= 255;
+        return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+      });
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+
+    const rgb1 = getRGB(color1);
+    const rgb2 = getRGB(color2);
+    const l1 = getLuminance(rgb1);
+    const l2 = getLuminance(rgb2);
+
+    // Calculate contrast ratio
+    const ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+    return ratio;
+  };
+
+  // Ensure text colors have sufficient contrast with backgrounds
+  const ensureReadableTextColor = (backgroundColor, preferredTextColor = '#333333') => {
+    const minContrast = 4.5; // WCAG AA standard for normal text
+    const contrast = getContrastRatio(backgroundColor, preferredTextColor);
+    
+    if (contrast >= minContrast) {
+      return preferredTextColor;
+    }
+    
+    // If contrast is insufficient, return either black or white based on background brightness
+    const { l } = hexToHSL(backgroundColor);
+    return l > 50 ? '#333333' : '#FFFFFF';
+  };
+
+  // Helper function to ensure readable text against a background, preserving original color's hue if possible
+  const ensureReadableTextColorPreservingHue = (bgColor, textColor) => {
+    const minContrast = 4.5; // WCAG AA standard for normal text
+    const originalContrast = getContrastRatio(bgColor, textColor);
+    
+    if (originalContrast >= minContrast) {
+      return textColor; // Original color has sufficient contrast
+    }
+    
+    // Try to preserve the hue but adjust lightness to improve contrast
+    const { h, s } = hexToHSL(textColor);
+    const bgHSL = hexToHSL(bgColor);
+    
+    // If background is dark, try a lighter version of the text color
+    if (bgHSL.l < 50) {
+      // Try increasing lightness while keeping the same hue
+      for (let l = 70; l <= 95; l += 5) {
+        const adjustedColor = hslToHex(h, s, l);
+        if (getContrastRatio(bgColor, adjustedColor) >= minContrast) {
+          return adjustedColor;
+        }
+      }
+    } else {
+      // If background is light, try a darker version of the text color
+      for (let l = 30; l >= 5; l -= 5) {
+        const adjustedColor = hslToHex(h, s, l);
+        if (getContrastRatio(bgColor, adjustedColor) >= minContrast) {
+          return adjustedColor;
+        }
+      }
+    }
+    
+    // If we couldn't achieve good contrast by adjusting lightness, fall back to black or white
+    return bgHSL.l > 50 ? '#333333' : '#FFFFFF';
+  };
+
+  // Generate color palette suggestions based on the selected primary color
+  const generateColorPalettes = () => {
+    const primaryColor = formData.primary_color || '#3498db';
+    const { h, s, l } = hexToHSL(primaryColor);
+    
+    const palettes = [];
+    
+    // Footer background color - we use a dark color for the footer background
+    // This is based on the website template which has a dark footer background
+    const footerBgColor = '#2c3e50'; // This is the default dark footer background
+    
+    // Complementary palette (opposite on the color wheel)
+    const complementarySecondary = hslToHex((h + 180) % 360, Math.max(s - 20, 0), Math.min(l + 10, 100));
+    const complementaryAccent = hslToHex((h + 180) % 360, Math.min(s + 20, 100), Math.max(l - 15, 0));
+    const compTitleColor = primaryColor;
+    palettes.push({
+      name: "Professional & Balanced",
+      description: "Creates visual interest and balanced contrast. Good for professional sites needing clear call-to-action elements.",
+      primary: primaryColor,
+      secondary: complementarySecondary,
+      accent: complementaryAccent,
+      text_color: ensureReadableTextColor(complementarySecondary, '#333333'),
+      heading_color: ensureReadableTextColor(primaryColor, '#222222'),
+      title_color: compTitleColor,
+      footer_text_color: ensureReadableTextColorPreservingHue(footerBgColor, compTitleColor)
+    });
+    
+    // Analogous palette (adjacent on the color wheel)
+    const analogousSecondary = hslToHex((h + 30) % 360, Math.max(s - 5, 0), Math.max(l - 10, 0));
+    const analogousAccent = hslToHex((h - 30 + 360) % 360, Math.min(s + 10, 100), Math.min(l + 5, 100));
+    const analogTitleColor = primaryColor;
+    palettes.push({
+      name: "Harmonious & Cohesive",
+      description: "Creates a natural, harmonious feel with colors that sit next to each other on the color wheel.",
+      primary: primaryColor,
+      secondary: analogousSecondary,
+      accent: analogousAccent,
+      text_color: ensureReadableTextColor(analogousSecondary, '#333333'),
+      heading_color: analogousSecondary,
+      title_color: analogTitleColor,
+      footer_text_color: ensureReadableTextColorPreservingHue(footerBgColor, analogTitleColor)
+    });
+    
+    // Triadic palette (evenly spaced around the color wheel)
+    const triadicSecondary = hslToHex((h + 120) % 360, s, l);
+    const triadicAccent = hslToHex((h + 240) % 360, s, l);
+    const triadicTitleColor = triadicAccent;
+    palettes.push({
+      name: "Dynamic & Vibrant",
+      description: "Creates visual vibrance and energy with three colors evenly spaced around the color wheel.",
+      primary: primaryColor,
+      secondary: triadicSecondary,
+      accent: triadicAccent,
+      text_color: ensureReadableTextColor(triadicSecondary, '#333333'),
+      heading_color: '#333333',
+      title_color: triadicTitleColor,
+      footer_text_color: ensureReadableTextColorPreservingHue(footerBgColor, triadicTitleColor)
+    });
+    
+    // Monochromatic palette (variations of the same color)
+    const monoSecondary = lightenDarkenColor(primaryColor, 25);
+    const monoAccent = lightenDarkenColor(primaryColor, -20);
+    const monoTitleColor = primaryColor;
+    palettes.push({
+      name: "Elegant & Focused",
+      description: "Creates a clean, cohesive look using different shades and tints of your primary color.",
+      primary: primaryColor,
+      secondary: monoSecondary,
+      accent: monoAccent,
+      text_color: ensureReadableTextColor(monoSecondary, '#333333'),
+      heading_color: monoAccent,
+      title_color: monoTitleColor,
+      footer_text_color: ensureReadableTextColorPreservingHue(footerBgColor, monoTitleColor)
+    });
+    
+    // Modern Neutral palette
+    const neutralGray = hslToHex(h, Math.max(s - 60, 0), Math.min(l + 5, 100));
+    const minimalTitleColor = primaryColor;
+    palettes.push({
+      name: "Modern & Minimalist",
+      description: "Creates a clean, contemporary design with neutral tones complemented by your primary color as an accent.",
+      primary: primaryColor,
+      secondary: neutralGray,
+      accent: hslToHex(h, Math.min(s + 10, 100), Math.max(l - 20, 0)),
+      text_color: '#333333',
+      heading_color: '#222222',
+      title_color: minimalTitleColor,
+      footer_text_color: ensureReadableTextColorPreservingHue(footerBgColor, minimalTitleColor)
+    });
+    
+    setColorPalettes(palettes);
+  };
+
+  // Apply a selected palette to the form data
+  const applyPalette = (palette, index) => {
+    setFormData(prev => ({
+      ...prev,
+      primary_color: palette.primary,
+      secondary_color: palette.secondary,
+      accent_color: palette.accent,
+      text_color: palette.text_color,
+      heading_color: palette.heading_color,
+      title_color: palette.title_color,
+      footer_text_color: palette.footer_text_color
+    }));
+    
+    // Update the selected palette index
+    setSelectedPaletteIndex(index);
+    
+    // Flash notification - add a class to show a brief animation
+    const paletteCard = document.querySelector(`#palette-card-${index}`);
+    if (paletteCard) {
+      paletteCard.classList.add('palette-applied-flash');
+      setTimeout(() => {
+        paletteCard.classList.remove('palette-applied-flash');
+      }, 500);
+    }
+  };
 
   return (
     <DashboardLayout>
