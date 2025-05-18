@@ -1966,7 +1966,7 @@ export async function getStaticProps({ params }) {
         props: {
           notFound: true
         },
-        revalidate: 10, // Reduce revalidation time to 10 seconds for not found pages
+        revalidate: 300, // Only revalidate every 5 minutes (300 seconds) for not found pages
       };
     }
     
@@ -1984,7 +1984,7 @@ export async function getStaticProps({ params }) {
         projectData: serializedProject,
         notFound: false
       },
-      revalidate: 10, // Reduce to 10 seconds to ensure frequent updates
+      revalidate: 300, // Only revalidate every 5 minutes (300 seconds) for better performance
     };
   } catch (error) {
     console.error(`[getStaticProps] Error fetching project ${projectId}:`, error);
@@ -1993,7 +1993,7 @@ export async function getStaticProps({ params }) {
         notFound: true,
         errorMessage: process.env.NODE_ENV === 'development' ? error.message : 'An error occurred'
       },
-      revalidate: 10, // Shorter revalidation for error pages
+      revalidate: 300, // Only revalidate every 5 minutes (300 seconds) for error pages
     };
   }
 }

@@ -36,28 +36,25 @@ async function handler(req, res) {
       // Force a DB touch to ensure we have the most recent data
       // This updates the updatedAt timestamp without changing data
       try {
-        const projectId = path.replace(/^//g, ''); // Remove leading slash if present
+        const projectId = path.replace(/^\//, ''); // Remove leading slash if present - fixed regex
         const { db } = await connectToDatabase();
         
-        // Add a unique timestamp to force database to recognize this as a change
+        // Simplified timestamp approach to avoid potential errors
         const now = new Date();
-        const uniqueTimestamp = `${now.toISOString()}-${Math.random().toString(36).substring(2, 15)}`;
         
-        // Touch the project to update its timestamp with more unique data
+        // Touch the project to update its timestamp
         const touchResult = await db.collection('projects').updateOne(
           { projectId: projectId },
           { 
             $set: { 
               touchedAt: now,
-              lastRevalidation: uniqueTimestamp,
-              revalidationSource: req.headers['x-revalidation-source'] || 'api-call'
+              lastRevalidationTime: now.toISOString()
             } 
           }
         );
         
         console.log(`[Revalidation] Touched project ${projectId} in database:`, 
           touchResult.matchedCount ? 'Found and updated' : 'Not found');
-        console.log(`[Revalidation] Updated with unique timestamp: ${uniqueTimestamp}`);
       } catch (dbError) {
         console.error('[Revalidation] DB touch error:', dbError);
         // Continue even if this fails - it's just an extra step
