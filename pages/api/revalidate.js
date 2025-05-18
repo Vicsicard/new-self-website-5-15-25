@@ -36,17 +36,28 @@ async function handler(req, res) {
       // Force a DB touch to ensure we have the most recent data
       // This updates the updatedAt timestamp without changing data
       try {
-        const projectId = path.replace(/^\//g, ''); // Remove leading slash if present
+        const projectId = path.replace(/^//g, ''); // Remove leading slash if present
         const { db } = await connectToDatabase();
         
-        // Touch the project to update its timestamp
+        // Add a unique timestamp to force database to recognize this as a change
+        const now = new Date();
+        const uniqueTimestamp = `${now.toISOString()}-${Math.random().toString(36).substring(2, 15)}`;
+        
+        // Touch the project to update its timestamp with more unique data
         const touchResult = await db.collection('projects').updateOne(
           { projectId: projectId },
-          { $set: { touchedAt: new Date() } }
+          { 
+            $set: { 
+              touchedAt: now,
+              lastRevalidation: uniqueTimestamp,
+              revalidationSource: req.headers['x-revalidation-source'] || 'api-call'
+            } 
+          }
         );
         
         console.log(`[Revalidation] Touched project ${projectId} in database:`, 
           touchResult.matchedCount ? 'Found and updated' : 'Not found');
+        console.log(`[Revalidation] Updated with unique timestamp: ${uniqueTimestamp}`);
       } catch (dbError) {
         console.error('[Revalidation] DB touch error:', dbError);
         // Continue even if this fails - it's just an extra step
@@ -55,9 +66,17 @@ async function handler(req, res) {
       // Force a full revalidation of the page with stronger invalidation
       try {
         console.log('[Revalidation] Calling Next.js revalidate function');
+        // Add enhanced logging
+        console.log(`[Revalidation] Path to revalidate: ${path}`);
+        console.log(`[Revalidation] Base URL: ${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}`);
+        
+        // Call the Next.js revalidation function
         await res.revalidate(path);
+        console.log('[Revalidation] Next.js revalidate function completed successfully');
       } catch (revalidateError) {
         console.error('[Revalidation] Error during Next.js revalidate call:', revalidateError);
+        console.error('[Revalidation] Error name:', revalidateError.name);
+        console.error('[Revalidation] Error message:', revalidateError.message);
         // Don't re-throw - try our manual approach anyway
       }
       
@@ -65,22 +84,34 @@ async function handler(req, res) {
       // Attempt manual fetch to multiple cache-busting URLs for the same path
       const fetchPromises = [];
       
-      for (let i = 0; i < 3; i++) { // Try multiple variations of cache busters
-        const cacheBuster = `${fullUrl}?nocache=${Date.now()}-${i}`;
+      // Enhanced cache-busting strategy with more variations and retries
+      for (let i = 0; i < 5; i++) { // Increased from 3 to 5 attempts
+        // Use a more complex and unique cache buster with timestamp and random component
+        const cacheBuster = `${fullUrl}?nocache=${Date.now()}-${Math.random().toString(36).substring(2, 10)}-${i}`;
         console.log(`[Revalidation] Fetching with cache buster (${i}):`, cacheBuster);
         
         const fetchPromise = fetch(cacheBuster, {
           method: 'GET',
           headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            // Stronger cache control directives
+            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
             'Pragma': 'no-cache',
-            'Expires': '0',
+            'Expires': '-1',
             'X-Revalidation-Force': 'true',
-            'X-Revalidation-Attempt': `${i+1}`
+            'X-Revalidation-Attempt': `${i+1}`,
+            'X-Cloudflare-No-Cache': '1', // Specific to Cloudflare
+            'X-Unique-Id': `${Date.now()}-${Math.random().toString(36).substring(2, 15)}` // Ensure unique request
           },
-        }).catch(err => console.error(`[Revalidation] Fetch error for attempt ${i+1}:`, err));
+        }).catch(err => {
+          console.error(`[Revalidation] Fetch error for attempt ${i+1}:`, err.message || err);
+          // Return a resolved promise so Promise.allSettled doesn't fail early
+          return { error: err.message, attempt: i+1 };
+        });
         
         fetchPromises.push(fetchPromise);
+        
+        // Short delay between requests to avoid overwhelming server
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
       
       // Wait for at least some of our fetch attempts to complete

@@ -278,6 +278,10 @@ export default function EditContent() {
     setSaveSuccess(false);
     setWebsiteCreated(false); // Reset website creation status
     setError('');
+    
+    // Debug current state before save
+    console.log('[DEBUG] Current formData has', Object.keys(formData).length, 'keys');
+    console.log('[DEBUG] First 5 keys:', Object.keys(formData).slice(0, 5));
 
     try {
       // Get project ID from URL query, current project, or user's assigned project
@@ -292,11 +296,16 @@ export default function EditContent() {
       
       // Convert form data back to content array
       // This is critical - we need valid key/value pairs for all content
+      if (!formData || typeof formData !== 'object' || Object.keys(formData).length === 0) {
+        console.error('[Text Save] formData is invalid:', formData);
+        throw new Error('Form data is empty or invalid. Cannot save.');
+      }
+      
       const content = Object.entries(formData)
         .filter(([key, value]) => key && key.trim() !== '') // Filter out empty keys
         .map(([key, value]) => ({ 
           key, 
-          value: value || '' // Ensure value is never undefined
+          value: (value === undefined || value === null) ? '' : String(value) // Ensure value is a valid string
         }));
       
       console.log('[Text Save] Content array to save, length:', content.length);
@@ -331,12 +340,26 @@ export default function EditContent() {
       
       let res;
       try {
+        // Validate payload size
+        const payloadString = JSON.stringify(payload);
+        console.log(`[Text Save] Payload size: ${payloadString.length} characters`);
+        
+        // Log the actual request we're about to send
+        console.log(`[Text Save] Request URL: /api/projects/${projectId}`);
+        console.log('[Text Save] Request method: PUT');
+        console.log('[Text Save] Request headers:', {
+          'Content-Type': 'application/json'
+        });
+        
         res = await fetch(`/api/projects/${projectId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest', // Help identify AJAX requests
+            'Cache-Control': 'no-cache', // Prevent caching
+            'Pragma': 'no-cache'
           },
-          body: JSON.stringify(payload),
+          body: payloadString,
           credentials: 'include' // Include cookies for authentication
         });
       } catch (fetchError) {
@@ -391,10 +414,19 @@ export default function EditContent() {
       // This ensures text changes appear on the site immediately without manual revalidation
       try {
         console.log(`[Text Save] Automatically triggering revalidation for /${projectId}`);
+        
+        // Wait a moment before revalidating to ensure DB writes are complete
+        console.log('[Text Save] Waiting 500ms before revalidation to ensure DB consistency');
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         const revalidateRes = await fetch('/api/revalidate', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache',
+            'X-Revalidation-Source': 'dashboard-save'
           },
           body: JSON.stringify({ path: `/${projectId}` }),
           credentials: 'include'
@@ -415,7 +447,15 @@ export default function EditContent() {
       // We want users to stay on the edit page to keep making changes
     } catch (err) {
       console.error('[Text Save] Error updating project:', err);
-      setError(`Failed to save changes: ${err.message}`);
+      // Provide more detailed error information
+      setError(`Failed to save changes: ${err.message}. Please try again or contact support if the problem persists.`);
+      
+      // Log additional debugging information
+      console.error('[Text Save] Error details:', {
+        formDataSize: formData ? Object.keys(formData).length : 'undefined',
+        projectId,
+        error: err.stack || err.toString()
+      });
     } finally {
       setSaving(false);
     }

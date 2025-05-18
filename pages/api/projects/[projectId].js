@@ -58,14 +58,22 @@ async function handler(req, res) {
       // Debug the full request body
       console.log('Full request body:', JSON.stringify(req.body));
       
-      // Extract content with explicit logging
+      // Extract content with enhanced logging
       const { name, content } = req.body;
+      console.log('Full request body received:', JSON.stringify(req.body, null, 2).substring(0, 500) + '...');
+      console.log('Body content type:', typeof req.body);
+      console.log('Content field type:', typeof content);
       console.log('Extracted content from request body:', content ? `Found ${Array.isArray(content) ? content.length : 'non-array'}` : 'undefined');
       
       // Validate content array
       if (!content) {
         console.error('No content provided in request body');
-        return res.status(400).json({ message: 'Content is required' });
+        console.error('Request headers:', JSON.stringify(req.headers, null, 2));
+        return res.status(400).json({ 
+          message: 'Content is required', 
+          requestBody: JSON.stringify(req.body).substring(0, 200),
+          contentType: req.headers['content-type']
+        });
       }
       
       if (!Array.isArray(content)) {
