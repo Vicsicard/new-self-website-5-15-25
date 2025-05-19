@@ -1,59 +1,39 @@
-import { connectToDatabase } from '../../../../lib/db';
-import Project from '../../../../models/Project';
+// DISABLED: This route conflicts with /api/projects/[projectId].js
+// Using a redirecting handler to avoid Next.js route conflicts
+
 import withAuth from '../../../../middleware/withAuth';
 
+// This handler is disabled to avoid route conflicts
 async function handler(req, res) {
-  const { method } = req;
-  const { projectId } = req.query;
-  const { db } = await connectToDatabase();
+  // Return a redirect or gone status for all requests to this route
+  console.log('[API] Disabled route accessed:', req.url);
 
-  // Check if user has access to this project
-  // Admin can access any project, client can only access their own
-  if (req.user.role !== 'admin' && req.user.projectId !== projectId) {
-    return res.status(403).json({ message: 'Not authorized to access this project' });
+  // This route is disabled because it conflicts with /api/projects/[projectId].js
+  // All requests should be directed to the parent route
+
+  // Return a 410 Gone status to indicate this endpoint is no longer available
+  return res.status(410).json({
+    error: 'Route Conflict',
+    message: 'This endpoint has been consolidated with /api/projects/[projectId]',
+    redirectTo: `/api/projects/${req.query.projectId}`
+  });
+}
+// Add CORS headers to prevent cache issues and allow cross-domain requests
+async function handlerWithCORS(req, res) {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+
+  // Handle OPTIONS method
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
   }
 
-  // GET /api/projects/[projectId] - Get specific project
-  if (method === 'GET') {
-    try {
-      const project = await Project.findByProjectId(db, projectId);
-      
-      if (!project) {
-        return res.status(404).json({ message: 'Project not found' });
-      }
-      
-      return res.status(200).json({ project });
-    } catch (error) {
-      console.error('Error getting project:', error);
-      return res.status(500).json({ message: 'Internal server error' });
-    }
-  }
-  
-  // PUT /api/projects/[projectId] - Update project details (admin only)
-  if (method === 'PUT') {
-    try {
-      // Only admin can update project details
-      if (req.user.role !== 'admin') {
-        return res.status(403).json({ message: 'Not authorized to update project details' });
-      }
-      
-      const { name } = req.body;
-      
-      // Update project
-      const result = await Project.update(db, projectId, { name });
-      
-      if (result.matchedCount === 0) {
-        return res.status(404).json({ message: 'Project not found' });
-      }
-      
-      return res.status(200).json({ message: 'Project updated successfully' });
-    } catch (error) {
-      console.error('Error updating project:', error);
-      return res.status(500).json({ message: 'Internal server error' });
-    }
-  }
-  
-  return res.status(405).json({ message: 'Method not allowed' });
+  // Handle other methods
+  return handler(req, res);
 }
 
-export default withAuth(handler);
+export default withAuth(handlerWithCORS);
