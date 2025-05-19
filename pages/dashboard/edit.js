@@ -298,13 +298,11 @@ export default function EditContent() {
     e.preventDefault();
     setSaving(true);
     setSaveSuccess(false);
-    setWebsiteCreated(false); // Reset website creation status
+    setWebsiteCreated(false);
     setError('');
     
     try {
-      // Get project ID from URL query, current project, or user's assigned project
       const projectId = router.query.id || project?.projectId || user?.projectId;
-      
       if (!projectId) {
         throw new Error('No project ID available');
       }
@@ -315,72 +313,24 @@ export default function EditContent() {
       const metadataFields = ['name', 'settings'];
       const contentFields = Object.keys(formData).filter(key => !metadataFields.includes(key));
       
-      // 1. First save metadata if needed
-      const metadataToUpdate = {};
-      metadataFields.forEach(field => {
-        if (formData[field] !== undefined) {
-          metadataToUpdate[field] = formData[field];
-        }
-      });
+      // 1. Save metadata if needed
+      await saveMetadata(projectId, formData, metadataFields);
       
-      if (Object.keys(metadataToUpdate).length > 0) {
-        console.log('[Save] Updating metadata:', metadataToUpdate);
-        const metadataRes = await fetch(`/api/projects/${projectId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(metadataToUpdate),
-          credentials: 'include'
-        });
-        
-        if (!metadataRes.ok) {
-          const errorText = await metadataRes.text();
-          throw new Error(`Failed to update metadata: ${errorText}`);
-        }
-        console.log('[Save] Metadata updated successfully');
-      }
-      
-      // 2. Then save content
-      console.log('[Save] Preparing content for save');
-      const content = contentFields
-        .filter(key => key && key.trim() !== '')
-        .map(key => ({
-          key,
-          value: String(formData[key] || '')
-        }));
-      
-      if (content.length > 0) {
-        console.log(`[Save] Saving ${content.length} content items`);
-        const contentRes = await fetch(`/api/projects/${projectId}/content`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ content }),
-          credentials: 'include'
-        });
-        
-        if (!contentRes.ok) {
-          const errorText = await contentRes.text();
-          throw new Error(`Failed to update content: ${errorText}`);
-        }
-        console.log('[Save] Content updated successfully');
+      // 2. Save content if there are content fields
+      if (contentFields.length > 0) {
+        await saveContent(projectId, formData, contentFields);
       } else {
         console.log('[Save] No content to save');
       }
       
-      // 3. Update local state with the saved data
-      const updatedProject = { ...project };
-      if (Object.keys(metadataToUpdate).length > 0) {
-        Object.assign(updatedProject, metadataToUpdate);
-      }
-      
-      setProject(updatedProject);
+      // 3. Update local state and show success
       setSaveSuccess(true);
-      
-      // Hide success message after 3 seconds
       setTimeout(() => setSaveSuccess(false), 3000);
+      
+      // 4. Trigger revalidation in the background
+      triggerRevalidation(projectId).catch(err => {
+        console.error('Background revalidation failed:', err);
+      });
       
     } catch (err) {
       console.error('Error saving project:', err);
@@ -388,62 +338,83 @@ export default function EditContent() {
     } finally {
       setSaving(false);
     }
-  }
-      // Instead, update the project object with our successfully saved content
-      if (project) {
-        const updatedProject = {
-          ...project,
-          content: content,
-          updatedAt: new Date().toISOString()
-        };
-        setProject(updatedProject);
-        console.log('[Text Save] Local project data updated successfully');
+  };
+  
+  // Save metadata to the project
+  const saveMetadata = async (projectId, formData, metadataFields) => {
+    const metadataToUpdate = {};
+    metadataFields.forEach(field => {
+      if (formData[field] !== undefined) {
+        metadataToUpdate[field] = formData[field];
       }
+    });
+    
+    if (Object.keys(metadataToUpdate).length === 0) return;
+    
+    console.log('[Save] Updating metadata:', metadataToUpdate);
+    const res = await fetch(`/api/projects/${projectId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(metadataToUpdate),
+      credentials: 'include'
+    });
+    
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`Failed to update metadata: ${errorText}`);
+    }
+    
+    console.log('[Save] Metadata updated successfully');
+  };
+  
+  // Save content to the project
+  const saveContent = async (projectId, formData, contentFields) => {
+    const content = contentFields
+      .filter(key => key && key.trim() !== '')
+      .map(key => ({
+        key,
+        value: String(formData[key] || '')
+      }));
+    
+    if (content.length === 0) return;
+    
+    console.log(`[Save] Saving ${content.length} content items`);
+    const res = await fetch(`/api/projects/${projectId}/content`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content }),
+      credentials: 'include'
+    });
+    
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`Failed to update content: ${errorText}`);
+    }
+    
+    console.log('[Save] Content updated successfully');
+  };
+  
+  // Trigger revalidation in the background
+  const triggerRevalidation = async (projectId) => {
+    try {
+      console.log(`[Revalidation] Triggering revalidation for /${projectId}`);
       
-      // CRITICAL FIX: Automatically trigger a revalidation for the site after text content save
-      // This ensures text changes appear on the site immediately without manual revalidation
-      try {
-        console.log(`[Text Save] Automatically triggering revalidation for /${projectId}`);
-        
-        // Wait a moment before revalidating to ensure DB writes are complete
-        console.log('[Text Save] Waiting 500ms before revalidation to ensure DB consistency');
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        const revalidateRes = await fetch('/api/revalidate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache',
-            'X-Revalidation-Source': 'dashboard-save'
-          },
-          body: JSON.stringify({ path: `/${projectId}` }),
-          credentials: 'include'
-        });
-        
-        if (revalidateRes.ok) {
-          console.log('[Text Save] Revalidation triggered successfully after text save');
-        } else {
-          console.warn('[Text Save] Revalidation after text save returned non-OK response:', await revalidateRes.text());
-        }
-      } catch (revalidateErr) {
-        console.error('[Text Save] Error triggering revalidation after text save:', revalidateErr);
-        // Don't throw this error - we want to show success for the save itself
-        // even if the revalidation fails
-      }
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Show success message but don't redirect anywhere
-      // We want users to stay on the edit page to keep making changes
-    } catch (err) {
-      // Error handling is now done in the catch block of handleSubmit
-      console.error('[Text Save] Error details:', {
-        formDataSize: formData ? Object.keys(formData).length : 'undefined',
-        projectId,
-        error: err.stack || err.toString()
+      const res = await fetch('/api/revalidate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: `/${projectId}` }),
+        credentials: 'include'
       });
-    } finally {
-      setSaving(false);
+      
+      if (res.ok) {
+        console.log('[Revalidation] Successfully triggered revalidation');
+      } else {
+        console.warn('[Revalidation] Failed to trigger revalidation:', await res.text());
+      }
+    } catch (err) {
+      console.error('[Revalidation] Error during revalidation:', err);
     }
   };
 
