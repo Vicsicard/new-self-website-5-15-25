@@ -550,6 +550,8 @@ export default function ClientSite({ projectData, notFound }) {
       transform: translateY(20px);
       opacity: 0;
       transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
     }
     .content-modal.active {
       transform: translateY(0);
@@ -577,7 +579,11 @@ export default function ClientSite({ projectData, notFound }) {
       color: #000;
     }
     .modal-content {
-      padding: 3rem;
+      padding: 3rem 3rem 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex: 1;
     }
     .modal-title {
       font-size: 2.5rem;
@@ -603,6 +609,34 @@ export default function ClientSite({ projectData, notFound }) {
       color: #000;
       font-size: 1.1rem;
       line-height: 1.8;
+      overflow-y: auto;
+      overflow-x: hidden;
+      max-height: calc(80vh - 140px);
+      padding: 0 1rem 2rem 0;
+      margin-right: -1rem;
+      scroll-behavior: smooth;
+      /* Custom scrollbar styling */
+      scrollbar-width: thin;
+      scrollbar-color: var(--primary-color) #eee;
+    }
+    
+    /* WebKit browsers scrollbar styling */
+    .modal-body::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .modal-body::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    
+    .modal-body::-webkit-scrollbar-thumb {
+      background: var(--primary-color);
+      border-radius: 10px;
+    }
+    
+    .modal-body::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-color);
     }
     .modal-body p {
       margin-bottom: 1.5rem;
@@ -1068,6 +1102,25 @@ export default function ClientSite({ projectData, notFound }) {
       .container {
         padding: 0 1rem;
       }
+      
+      .content-modal {
+        width: 95%;
+        max-height: 95vh;
+      }
+      
+      .modal-content {
+        padding: 2rem 1.5rem 0;
+      }
+      
+      .modal-body {
+        max-height: calc(85vh - 120px);
+        padding: 0 0.5rem 1.5rem 0;
+      }
+      
+      .modal-title {
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+      }
       .header-content {
         padding: 4rem 0;
       }
@@ -1196,8 +1249,11 @@ export default function ClientSite({ projectData, notFound }) {
           modalBodyElement.appendChild(fragment);
           if (loadingIndicator) loadingIndicator.style.display = 'none';
           
-          // Scroll back to top when finished loading
-          modalBodyElement.scrollTop = 0;
+          // Scroll back to top when finished loading with smooth animation
+          modalBodyElement.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          });
           
           // Add completion message for very large content
           if (totalParagraphs > 20) {
