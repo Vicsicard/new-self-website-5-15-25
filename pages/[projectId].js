@@ -614,6 +614,45 @@ export default function ClientSite({ projectData, notFound }) {
     .modal-body p:last-of-type {
       margin-bottom: 0;
     }
+    
+    /* Loading indicator styles */
+    .loading-indicator {
+      display: none;
+      position: absolute;
+      top: 70px;
+      right: 70px;
+      padding: 8px 16px;
+      background-color: var(--primary-color);
+      color: white;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+      z-index: 2;
+      animation: pulse 1.5s infinite ease-in-out;
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 0.8; transform: scale(0.95); }
+      50% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0.8; transform: scale(0.95); }
+    }
+    
+    .loading-message {
+      font-style: italic;
+      color: #777;
+      text-align: center;
+      padding: 1rem 0;
+    }
+    
+    .completed-message {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: #777;
+      text-align: center;
+      border-top: 1px solid #eee;
+      padding-top: 1rem;
+    }
     .modal-body h3 {
       font-size: 1.8rem;
       color: #000;
@@ -1092,8 +1131,87 @@ export default function ClientSite({ projectData, notFound }) {
     const modalBody = document.getElementById('modal-body');
     const modalClose = document.getElementById('modal-close');
     const readMoreButtons = document.querySelectorAll('.read-more-btn');
+    const loadingIndicator = document.getElementById('modal-loading-indicator');
     
     if (!modalOverlay || !modal || !modalTitle || !modalBody || !modalClose) return;
+    
+    // Progressive content loading function
+    const renderContentProgressively = (content, modalBodyElement) => {
+      // Parse content into paragraphs
+      const paragraphs = content.split('\n\n');
+      const totalParagraphs = paragraphs.length;
+      
+      // Clear modal body and show loading indicator if exists
+      modalBodyElement.innerHTML = '';
+      if (loadingIndicator) loadingIndicator.style.display = 'block';
+      
+      // Create a document fragment for better performance
+      const fragment = document.createDocumentFragment();
+      let processedParagraphs = 0;
+      
+      // Add a loading message if content is large
+      if (totalParagraphs > 10) {
+        const loadingMessage = document.createElement('p');
+        loadingMessage.className = 'loading-message';
+        loadingMessage.textContent = 'Loading content...';
+        modalBodyElement.appendChild(loadingMessage);
+      }
+      
+      // Process chunks of content with setTimeout to avoid UI blocking
+      const processNextChunk = (startIdx, chunkSize = 5) => {
+        const endIdx = Math.min(startIdx + chunkSize, totalParagraphs);
+        
+        // Process this chunk of paragraphs
+        for (let i = startIdx; i < endIdx; i++) {
+          const paragraph = paragraphs[i];
+          if (!paragraph.trim()) continue; // Skip empty paragraphs
+          
+          const p = document.createElement('p');
+          p.innerHTML = paragraph.replace(/\n/g, '<br>');
+          fragment.appendChild(p);
+          processedParagraphs++;
+        }
+        
+        // Update progress if we have a large content
+        if (totalParagraphs > 10 && loadingIndicator) {
+          const progress = Math.round((processedParagraphs / totalParagraphs) * 100);
+          loadingIndicator.textContent = `Loading: ${progress}%`;
+        }
+        
+        // If this is the first chunk or a small content, render immediately
+        if (startIdx === 0 || totalParagraphs <= 10) {
+          // Remove loading message if it exists
+          const loadingMessage = modalBodyElement.querySelector('.loading-message');
+          if (loadingMessage) modalBodyElement.removeChild(loadingMessage);
+          
+          // Append the fragment with the processed paragraphs
+          modalBodyElement.appendChild(fragment);
+        }
+        
+        // If there are more paragraphs to process, schedule the next chunk
+        if (endIdx < totalParagraphs) {
+          setTimeout(() => processNextChunk(endIdx), 10); // 10ms delay between chunks
+        } else {
+          // We're done, append any remaining content and hide loading indicator
+          modalBodyElement.appendChild(fragment);
+          if (loadingIndicator) loadingIndicator.style.display = 'none';
+          
+          // Scroll back to top when finished loading
+          modalBodyElement.scrollTop = 0;
+          
+          // Add completion message for very large content
+          if (totalParagraphs > 20) {
+            const completedMessage = document.createElement('p');
+            completedMessage.className = 'completed-message';
+            completedMessage.innerHTML = `<em>Loaded ${totalParagraphs} paragraphs</em>`;
+            modalBodyElement.appendChild(completedMessage);
+          }
+        }
+      };
+      
+      // Start processing from the beginning
+      processNextChunk(0);
+    };
     
     // Function to open modal with post content
     const openModal = (postId, platform = 'blog') => {
@@ -1124,21 +1242,25 @@ export default function ClientSite({ projectData, notFound }) {
           break;
       }
       
-      // Set modal content
+      // Set modal title
       modalTitle.innerText = title;
       
-      // Format content as paragraphs
-      const formattedContent = content
-        .split('\n\n')
-        .map(paragraph => `<p>${paragraph.replace(/\n/g, '<br>')}</p>`)
-        .join('');
+      // Show initial loading state
+      modalBody.innerHTML = '<p>Loading content...</p>';
       
-      modalBody.innerHTML = formattedContent || '<p>No content available</p>';
-      
-      // Show modal
+      // Show modal immediately to provide feedback
       modalOverlay.classList.add('active');
       modal.classList.add('active');
       document.body.style.overflow = 'hidden'; // Prevent scrolling
+      
+      // Use our progressive loading function (slight delay to allow modal animation)
+      setTimeout(() => {
+        if (!content || content.trim() === '') {
+          modalBody.innerHTML = '<p>No content available</p>';
+          return;
+        }
+        renderContentProgressively(content, modalBody);
+      }, 100);
     };
     
     // Function to close modal
@@ -1413,6 +1535,7 @@ export default function ClientSite({ projectData, notFound }) {
                     <div className="modal-close" id="modal-close">×</div>
                     <div className="modal-content">
                       <h2 className="modal-title" id="modal-title"></h2>
+                      <div id="modal-loading-indicator" className="loading-indicator"></div>
                       <div className="modal-body" id="modal-body"></div>
                     </div>
                   </div>
