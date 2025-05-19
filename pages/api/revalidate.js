@@ -107,6 +107,11 @@ async function handler(req, res) {
       // Attempt manual fetch to multiple cache-busting URLs for the same path
       const fetchPromises = [];
       
+      // Construct the full URL from the base URL and path
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://new-self-website-5-15-25.onrender.com';
+      const fullUrl = `${baseUrl}${path}`;
+      console.log(`[Revalidation] Base URL: ${baseUrl}, Full URL: ${fullUrl}`);
+      
       // Enhanced cache-busting strategy with more variations and retries
       for (let i = 0; i < 5; i++) { // Increased from 3 to 5 attempts
         // Use a more complex and unique cache buster with timestamp and random component
