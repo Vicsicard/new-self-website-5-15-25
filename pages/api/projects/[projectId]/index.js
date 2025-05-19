@@ -1,20 +1,19 @@
-// DISABLED: This route conflicts with /api/projects/[projectId].js
-// Using a redirecting handler to avoid Next.js route conflicts
+// This route now redirects to the parent route to avoid conflicts
+// Instead of returning a 410 Gone, we redirect to the parent route
 
 import withAuth from '../../../../middleware/withAuth';
 
-// This handler is disabled to avoid route conflicts
+// This handler redirects requests to the parent route
 async function handler(req, res) {
-  // Return a redirect or gone status for all requests to this route
-  console.log('[API] Disabled route accessed:', req.url);
+  // Log redirection for debugging
+  console.log('[API] Redirecting legacy route:', req.url);
 
-  // This route is disabled because it conflicts with /api/projects/[projectId].js
-  // All requests should be directed to the parent route
-
-  // Return a 410 Gone status to indicate this endpoint is no longer available
-  return res.status(410).json({
-    error: 'Route Conflict',
-    message: 'This endpoint has been consolidated with /api/projects/[projectId]',
+  // Set redirect headers
+  res.setHeader('Location', `/api/projects/${req.query.projectId}`);
+  
+  // Return a 307 Temporary Redirect 
+  return res.status(307).json({
+    message: 'This endpoint has moved to /api/projects/[projectId]',
     redirectTo: `/api/projects/${req.query.projectId}`
   });
 }
