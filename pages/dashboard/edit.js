@@ -5,6 +5,37 @@ import DashboardLayout from '../../components/dashboard/Layout';
 import { AuthContext } from '../_app';
 import { FaLightbulb, FaCheck } from 'react-icons/fa';
 
+// Simple content fingerprinting function
+function generateContentFingerprint(formData) {
+  // Filter to just content fields that affect the public site
+  const publicFields = Object.keys(formData).filter(key => {
+    // Ignore internal fields and metadata
+    return !key.startsWith('_') && 
+           key !== 'name' &&
+           key !== 'settings' &&
+           key !== 'projectId';
+  }).sort(); // Sort for consistent order
+  
+  // Create a simplified object with just the public fields
+  const publicContent = publicFields.reduce((obj, key) => {
+    obj[key] = formData[key];
+    return obj;
+  }, {});
+  
+  // Create a simple hash by converting to string and taking a hash
+  // Note: In production, you might want a more robust hashing algorithm
+  const contentStr = JSON.stringify(publicContent);
+  let hash = 0;
+  for (let i = 0; i < contentStr.length; i++) {
+    const char = contentStr.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  
+  // Return absolute value and add timestamp prefix for uniqueness
+  return Math.abs(hash).toString();
+}
+
 export default function EditContent() {
   const [project, setProject] = useState(null);
   const [formData, setFormData] = useState({});
@@ -20,6 +51,10 @@ export default function EditContent() {
   const [selectedPaletteIndex, setSelectedPaletteIndex] = useState(null);
   const [colorSaved, setColorSaved] = useState(false);
   const [lastSavedColor, setLastSavedColor] = useState('');
+  // New state variables for content fingerprinting
+  const [originalContentFingerprint, setOriginalContentFingerprint] = useState('');
+  const [lastRevalidatedFingerprint, setLastRevalidatedFingerprint] = useState('');
+  const [contentChanged, setContentChanged] = useState(false);
   const { user, isAuthenticated, loading: authLoading } = useContext(AuthContext);
   const router = useRouter();
 
@@ -93,6 +128,12 @@ export default function EditContent() {
         
         console.log('Initial form data:', initialFormData);
         setFormData(initialFormData);
+        
+        // Generate and store the initial content fingerprint
+        const initialFingerprint = generateContentFingerprint(initialFormData);
+        console.log('[Fingerprint] Initial content fingerprint:', initialFingerprint);
+        setOriginalContentFingerprint(initialFingerprint);
+        setLastRevalidatedFingerprint(initialFingerprint);
       } catch (err) {
         console.error('Error fetching project:', err);
         setError('Failed to load project data. Please try again later.');
@@ -309,6 +350,15 @@ export default function EditContent() {
       
       console.log('[Save] Starting save process for project:', projectId);
       
+      // Generate new content fingerprint to compare with original
+      const currentFingerprint = generateContentFingerprint(formData);
+      console.log('[Fingerprint] Current content fingerprint:', currentFingerprint);
+      console.log('[Fingerprint] Original content fingerprint:', originalContentFingerprint);
+      
+      // Check if content has actually changed
+      const hasContentChanged = currentFingerprint !== originalContentFingerprint;
+      setContentChanged(hasContentChanged);
+      
       // Separate metadata from content
       const metadataFields = ['name', 'settings'];
       const contentFields = Object.keys(formData).filter(key => !metadataFields.includes(key));
@@ -327,10 +377,21 @@ export default function EditContent() {
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
       
-      // 4. Trigger revalidation in the background
-      triggerRevalidation(projectId).catch(err => {
-        console.error('Background revalidation failed:', err);
-      });
+      // 4. Trigger revalidation ONLY if content has changed
+      if (hasContentChanged) {
+        console.log('[Fingerprint] Content changed, triggering revalidation');
+        try {
+          await triggerRevalidation(projectId, currentFingerprint);
+          // Update the last revalidated fingerprint after successful revalidation
+          setLastRevalidatedFingerprint(currentFingerprint);
+          // Update the original fingerprint to match current
+          setOriginalContentFingerprint(currentFingerprint);
+        } catch (err) {
+          console.error('[Fingerprint] Background revalidation failed:', err);
+        }
+      } else {
+        console.log('[Fingerprint] No content changes detected, skipping revalidation');
+      }
       
     } catch (err) {
       console.error('Error saving project:', err);
@@ -394,27 +455,38 @@ export default function EditContent() {
     console.log('[Save] Content updated successfully');
   };
   
-  // Trigger revalidation in the background
-  const triggerRevalidation = async (projectId) => {
+  // Trigger revalidation in the background with content fingerprint
+  const triggerRevalidation = async (projectId, contentFingerprint) => {
     try {
-      console.log(`[Revalidation] Triggering revalidation for /${projectId}`);
+      console.log(`[Revalidation] Triggering revalidation for /${projectId} with fingerprint ${contentFingerprint}`);
       
       await new Promise(resolve => setTimeout(resolve, 500));
       
       const res = await fetch('/api/revalidate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: `/${projectId}` }),
+        body: JSON.stringify({
+          path: `/${projectId}`,
+          contentFingerprint: contentFingerprint,
+          timestamp: Date.now()
+        }),
         credentials: 'include'
       });
       
+      const data = await res.json();
+      
       if (res.ok) {
-        console.log('[Revalidation] Successfully triggered revalidation');
+        if (data.revalidated) {
+          console.log('[Revalidation] Successfully triggered revalidation');
+        } else if (data.skipped) {
+          console.log('[Revalidation] Revalidation skipped:', data.message);
+        }
       } else {
-        console.warn('[Revalidation] Failed to trigger revalidation:', await res.text());
+        console.warn('[Revalidation] Failed to trigger revalidation:', data.message || 'Unknown error');
       }
     } catch (err) {
       console.error('[Revalidation] Error during revalidation:', err);
+      throw err; // Re-throw so caller can handle
     }
   };
 

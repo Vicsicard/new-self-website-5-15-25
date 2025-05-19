@@ -9,8 +9,8 @@ async function handler(req, res) {
   }
 
   try {
-    // Get the path to revalidate from the request body
-    const { path } = req.body;
+    // Get the path and content fingerprint from request body
+    const { path, contentFingerprint, timestamp } = req.body;
 
     if (!path) {
       return res.status(400).json({ message: 'Path is required' });
@@ -19,46 +19,72 @@ async function handler(req, res) {
     // Log detailed request information for debugging
     console.log('[Revalidation] Received revalidation request:', req.url);
     console.log('[Revalidation] Request method:', req.method);
-    console.log('[Revalidation] Request headers:', JSON.stringify(req.headers, null, 2));
+    console.log('[Revalidation] Content fingerprint:', contentFingerprint);
 
     // Only allow admin users or users trying to revalidate their own project
     if (req.user.role !== 'admin' && !path.includes(req.user.projectId)) {
       return res.status(403).json({ message: 'Not authorized to revalidate this page' });
     }
 
-    console.log(`Revalidating path: ${path}`);
+    // Extract projectId from path
+    const projectId = path.replace(/^\//, ''); // Remove leading slash if present
+    console.log(`[Revalidation] Processing revalidation for project: ${projectId}`);
 
     try {
-      // Add additional headers to force a bypass of the cache
-      const fullUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}${path}`;
-      console.log(`[Revalidation] Attempting to regenerate: ${fullUrl}`);
+      // Connect to database
+      const { db } = await connectToDatabase();
       
-      // Force a DB touch to ensure we have the most recent data
-      // This updates the updatedAt timestamp without changing data
-      try {
-        const projectId = path.replace(/^\//, ''); // Remove leading slash if present - fixed regex
-        const { db } = await connectToDatabase();
-        
-        // Simplified timestamp approach to avoid potential errors
-        const now = new Date();
-        
-        // Touch the project to update its timestamp
-        const touchResult = await db.collection('projects').updateOne(
-          { projectId: projectId },
-          { 
-            $set: { 
-              touchedAt: now,
-              lastRevalidationTime: now.toISOString()
-            } 
-          }
-        );
-        
-        console.log(`[Revalidation] Touched project ${projectId} in database:`, 
-          touchResult.matchedCount ? 'Found and updated' : 'Not found');
-      } catch (dbError) {
-        console.error('[Revalidation] DB touch error:', dbError);
-        // Continue even if this fails - it's just an extra step
+      // Get current project to check last fingerprint and revalidation time
+      const project = await db.collection('projects').findOne({ projectId });
+      
+      if (!project) {
+        console.log(`[Revalidation] Project ${projectId} not found in database`);
+        return res.status(404).json({ message: 'Project not found' });
       }
+      
+      // Check if we already revalidated this exact content version
+      if (project.contentFingerprint === contentFingerprint) {
+        console.log(`[Revalidation] Skipping - content hasn't changed since last revalidation`);
+        return res.status(200).json({
+          skipped: true,
+          message: 'Content has not changed since last revalidation',
+          lastRevalidationTime: project.lastRevalidationTime
+        });
+      }
+      
+      // Check if there was a recent revalidation (within 10 seconds) to prevent duplicates
+      const now = new Date();
+      const minimumInterval = 10000; // 10 seconds
+      
+      if (project.lastRevalidationTime) {
+        const lastRevalTime = new Date(project.lastRevalidationTime);
+        const timeSinceLastReval = now - lastRevalTime;
+        
+        if (timeSinceLastReval < minimumInterval) {
+          console.log(`[Revalidation] Throttled - too soon (${Math.floor(timeSinceLastReval/1000)}s since last revalidation)`);
+          return res.status(200).json({
+            skipped: true,
+            message: `Revalidation throttled (${Math.floor(timeSinceLastReval/1000)}s since last revalidation)`,
+            lastRevalidationTime: project.lastRevalidationTime,
+            nextAllowedTime: new Date(lastRevalTime.getTime() + minimumInterval)
+          });
+        }
+      }
+      
+      // Update the project with new fingerprint and revalidation time
+      const updateResult = await db.collection('projects').updateOne(
+        { projectId },
+        { 
+          $set: { 
+            contentFingerprint,
+            lastRevalidationTime: now.toISOString(),
+            touchedAt: now
+          } 
+        }
+      );
+      
+      console.log(`[Revalidation] Updated project ${projectId} with new fingerprint:`, 
+        updateResult.matchedCount ? 'Found and updated' : 'Not found');
       
       // Force a full revalidation of the page with stronger invalidation
       try {
@@ -127,7 +153,10 @@ async function handler(req, res) {
 
     return res.status(200).json({
       revalidated: true,
-      message: 'Website updated successfully!'
+      message: 'Website updated successfully!',
+      contentFingerprint,
+      path,
+      timestamp: new Date().toISOString()
     });
   } catch (err) {
     console.error('Error revalidating:', err);
