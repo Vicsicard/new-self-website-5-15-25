@@ -5,207 +5,92 @@ import withAuth from '../../../middleware/withAuth';
 async function handler(req, res) {
   const { method } = req;
   const { projectId } = req.query;
-  const { db } = await connectToDatabase();
-
-  // GET /api/projects/[projectId] - Get a specific project
-  if (method === 'GET') {
-    try {
-      // Find project by ID
-      const project = await Project.findByProjectId(db, projectId);
-      
-      if (!project) {
-        return res.status(404).json({ message: 'Project not found' });
-      }
-      
-      // Check if user has access to this project
-      if (req.user.role !== 'admin' && req.user.projectId !== projectId) {
-        return res.status(403).json({ message: 'Not authorized to access this project' });
-      }
-      
-      return res.status(200).json({ project });
-    } catch (error) {
-      console.error('Error getting project:', error);
-      return res.status(500).json({ message: 'Internal server error' });
-    }
-  }
   
-  // PUT /api/projects/[projectId] - Update a project
-  if (method === 'PUT') {
-    try {
-      console.log(`Updating project ${projectId}`, JSON.stringify(req.body, null, 2));
-      console.log('User:', req.user); // Log authenticated user info
-      
-      // Find project by ID
-      const project = await Project.findByProjectId(db, projectId);
-      
-      if (!project) {
-        console.error(`Project not found with ID: ${projectId}`);
-        return res.status(404).json({ message: 'Project not found' });
-      }
-      
-      console.log('Found project:', JSON.stringify(project, null, 2));
-      
-      // Check if user has access to this project
-      // Allow users to edit their own project, identified by projectId
-      if (req.user.role !== 'admin' && req.user.projectId !== projectId) {
-        console.error(`User ${req.user._id} not authorized to update project ${projectId}`);
-        console.error(`User projectId: ${req.user.projectId}, requested projectId: ${projectId}`);
-        return res.status(403).json({ message: 'Not authorized to update this project' });
-      }
-      
-      console.log('Authorization passed: User has permission to edit this project');
-      
-      // Debug the full request body
-      console.log('Full request body:', JSON.stringify(req.body));
-      
-      // Extract content with enhanced logging
-      const { name, content } = req.body;
-      console.log('Full request body received:', JSON.stringify(req.body, null, 2).substring(0, 500) + '...');
-      console.log('Body content type:', typeof req.body);
-      console.log('Content field type:', typeof content);
-      console.log('Extracted content from request body:', content ? `Found ${Array.isArray(content) ? content.length : 'non-array'}` : 'undefined');
-      
-      // Validate content array
-      if (!content) {
-        console.error('No content provided in request body');
-        console.error('Request headers:', JSON.stringify(req.headers, null, 2));
-        return res.status(400).json({ 
-          message: 'Content is required', 
-          requestBody: JSON.stringify(req.body).substring(0, 200),
-          contentType: req.headers['content-type']
-        });
-      }
-      
-      if (!Array.isArray(content)) {
-        console.error('Content is not an array:', typeof content);
-        return res.status(400).json({ message: 'Content must be an array' });
-      }
-      
-      console.log(`Content array length: ${content.length}`);
-      if (content.length === 0) {
-        console.error('Content array is empty');
-        return res.status(400).json({ message: 'Content array cannot be empty' });
-      }
-      
-      // Prepare update data
-      const updateData = {};
-      if (name) updateData.name = name;
-      
-      // Only update content if it's provided and valid
-      if (content && Array.isArray(content)) {
-        // Debug each content item
-        if (content.length > 0) {
-          // Log some sample items for debugging
-          const sampleItems = content.slice(0, 3);
-          console.log('Sample content items:', JSON.stringify(sampleItems, null, 2));
-          
-          // Check specifically for color values
-          const colorItems = content.filter(item => 
-            item && item.key && (item.key.includes('color') || item.key.includes('_style'))
-          );
-          if (colorItems.length > 0) {
-            console.log('Color-related fields:', JSON.stringify(colorItems, null, 2));
-          }
+  try {
+    const { db } = await connectToDatabase();
+
+    // Check if user has access to this project
+    if (req.user.role !== 'admin' && req.user.projectId !== projectId) {
+      return res.status(403).json({ message: 'Not authorized to access this project' });
+    }
+
+    // GET /api/projects/[projectId] - Get project metadata
+    if (method === 'GET') {
+      try {
+        const project = await Project.findByProjectId(db, projectId);
+        
+        if (!project) {
+          return res.status(404).json({ message: 'Project not found' });
         }
         
-        // Filter out invalid content items
-        const validContent = content.filter(item => 
-          item && typeof item === 'object' && item.key && item.key.trim() !== ''
+        // Remove content from response to force using /content endpoint
+        const { content, ...projectWithoutContent } = project;
+        return res.status(200).json({ project: projectWithoutContent });
+      } catch (error) {
+        console.error('Error getting project:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+    }
+    
+    // PUT /api/projects/[projectId] - Update project metadata
+    if (method === 'PUT') {
+      try {
+        const { name, settings } = req.body;
+        
+        // Only update allowed fields
+        const updateData = {};
+        if (name !== undefined) updateData.name = name;
+        if (settings !== undefined) updateData.settings = settings;
+        
+        if (Object.keys(updateData).length === 0) {
+          return res.status(400).json({ message: 'No valid fields to update' });
+        }
+        
+        const result = await db.collection('projects').updateOne(
+          { projectId },
+          { $set: { ...updateData, updatedAt: new Date() } }
         );
         
-        console.log(`Valid content items: ${validContent.length} out of ${content.length}`);
-        
-        if (validContent.length === 0) {
-          console.error('No valid content items found');
-          return res.status(400).json({ message: 'No valid content items provided' });
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ message: 'Project not found' });
         }
         
-        // Merge with existing content to preserve fields not in the update
-        const existingContentMap = {};
-        if (project.content && Array.isArray(project.content)) {
-          project.content.forEach(item => {
-            if (item && item.key) {
-              existingContentMap[item.key] = item.value;
-            }
-          });
-        }
-        
-        console.log(`Existing content map has ${Object.keys(existingContentMap).length} keys`);
-        
-        // Update existing values with new ones
-        validContent.forEach(item => {
-          existingContentMap[item.key] = item.value;
-        });
-        
-        // Convert back to array format
-        updateData.content = Object.entries(existingContentMap).map(([key, value]) => ({
-          key,
-          value: value || ''
-        }));
-        
-        console.log(`Final content array has ${updateData.content.length} items`);
+        return res.status(200).json({ message: 'Project updated successfully' });
+      } catch (error) {
+        console.error('Error updating project:', error);
+        return res.status(500).json({ message: 'Internal server error' });
       }
-      
-      console.log('Final update data (sample):', JSON.stringify(updateData.content?.slice(0, 3), null, 2));
-      
-      // Extra verification step - check if content exists before update
-      console.log(`Verifying update for project ${projectId}`);
-      console.log(`Content array length: ${updateData.content?.length}`);
-      
-      if (!updateData.content || !Array.isArray(updateData.content) || updateData.content.length === 0) {
-        console.error('Content array is invalid before update');
-        return res.status(400).json({
-          message: 'Cannot update with empty content array',
-          details: {
-            contentExists: !!updateData.content,
-            isArray: Array.isArray(updateData.content),
-            length: updateData.content?.length || 0
-          }
-        });
-      }
-      
-      // Perform the actual update
-      try {
-        const updateResult = await Project.update(db, projectId, updateData);
-        console.log('MongoDB update result:', updateResult);
-        
-        if (updateResult.matchedCount === 0) {
-          console.error(`Project not found during update: ${projectId}`);
-          return res.status(404).json({ message: 'Project not found during update' });
-        }
-        
-        // Get the updated project to verify the update worked
-        const updatedProject = await Project.findByProjectId(db, projectId);
-        
-        if (!updatedProject) {
-          console.error('Failed to retrieve updated project');
-          return res.status(500).json({ message: 'Failed to retrieve updated project' });
-        }
-        
-        if (!updatedProject.content || !Array.isArray(updatedProject.content)) {
-          console.error('Updated project has invalid content structure');
-          return res.status(500).json({ message: 'Project updated but content is invalid' });
-        }
-        
-        console.log(`Project updated successfully. New content length: ${updatedProject.content.length}`);
-        
-        // Return success with the updated project
-        return res.status(200).json({ 
-          message: 'Project updated successfully',
-          project: updatedProject
-        });
-      } catch (updateError) {
-        console.error('Error during project update:', updateError);
-        return res.status(500).json({ message: `Update failed: ${updateError.message}` });
-      }
-    } catch (error) {
-      console.error('Error updating project:', error);
-      return res.status(500).json({ message: `Internal server error: ${error.message}` });
     }
+    
+    // DELETE /api/projects/[projectId] - Delete a project
+    if (method === 'DELETE') {
+      try {
+        // Only admins can delete projects
+        if (req.user.role !== 'admin') {
+          return res.status(403).json({ message: 'Not authorized to delete projects' });
+        }
+        
+        const result = await db.collection('projects').deleteOne({ projectId });
+        
+        if (result.deletedCount === 0) {
+          return res.status(404).json({ message: 'Project not found' });
+        }
+        
+        return res.status(200).json({ message: 'Project deleted successfully' });
+      } catch (error) {
+        console.error('Error deleting project:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+    }
+    
+    // Method not allowed
+    res.setHeader('Allow', ['GET', 'PUT', 'DELETE']);
+    return res.status(405).json({ message: `Method ${method} not allowed` });
+    
+  } catch (error) {
+    console.error('Error in project API:', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
-  
-  // Method not allowed
-  return res.status(405).json({ message: 'Method not allowed' });
 }
 
 export default withAuth(handler);

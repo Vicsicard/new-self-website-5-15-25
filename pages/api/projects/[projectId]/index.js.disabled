@@ -1,0 +1,17 @@
+// This is a disabled version of the conflicting API route
+// The content was moved to the main [projectId].js file
+// This file exists just to keep a backup of the original content
+
+import { connectToDatabase } from '../../../../lib/db';
+import Project from '../../../../models/Project';
+import withAuth from '../../../../middleware/withAuth';
+
+// This handler is disabled to prevent route conflicts
+async function handler(req, res) {
+  return res.status(410).json({ 
+    message: 'This endpoint has been consolidated with the parent route',
+    redirectTo: '/api/projects/[projectId]'
+  });
+}
+
+export default withAuth(handler);

@@ -30,7 +30,7 @@ export default function EditContent() {
     }
   }, [isAuthenticated, authLoading, router]);
 
-  // Fetch project data
+  // Fetch project data and content
   useEffect(() => {
     // Skip fetching if we're still loading auth state
     if (authLoading) return;
@@ -48,24 +48,45 @@ export default function EditContent() {
         
         console.log('Fetching project with ID:', projectId);
         
-        // Fetch the specific project by ID
-        // Use the content endpoint to avoid the route conflict
-        const res = await fetch(`/api/projects/${projectId}/content`);
-        
-        if (!res.ok) {
-          throw new Error('Failed to fetch project');
+        // First, fetch project metadata
+        const projectRes = await fetch(`/api/projects/${projectId}`);
+        if (!projectRes.ok) {
+          throw new Error('Failed to fetch project metadata');
         }
         
-        const data = await res.json();
-        console.log('Project data received:', data.project);
-        setProject(data.project);
+        // Then fetch project content
+        const contentRes = await fetch(`/api/projects/${projectId}/content`);
+        if (!contentRes.ok) {
+          throw new Error('Failed to fetch project content');
+        }
+        
+        const projectData = await projectRes.json();
+        const contentData = await contentRes.json();
+        
+        // Combine the data
+        const combinedData = {
+          ...projectData.project, // Project metadata
+          content: contentData.content || []
+        };
+        
+        console.log('Project data received:', combinedData);
+        setProject(combinedData);
         
         // Convert content array to form data object for easier editing
         const initialFormData = {};
-        if (data.project.content && Array.isArray(data.project.content)) {
-          data.project.content.forEach(item => {
+        if (contentData.content && Array.isArray(contentData.content)) {
+          contentData.content.forEach(item => {
             if (item && item.key) {
               initialFormData[item.key] = item.value || '';
+            }
+          });
+        }
+        
+        // Add any metadata fields to the form data
+        if (projectData.project) {
+          Object.entries(projectData.project).forEach(([key, value]) => {
+            if (value !== null && value !== undefined && key !== 'content') {
+              initialFormData[key] = value;
             }
           });
         }
@@ -280,10 +301,6 @@ export default function EditContent() {
     setWebsiteCreated(false); // Reset website creation status
     setError('');
     
-    // Debug current state before save
-    console.log('[DEBUG] Current formData has', Object.keys(formData).length, 'keys');
-    console.log('[DEBUG] First 5 keys:', Object.keys(formData).slice(0, 5));
-
     try {
       // Get project ID from URL query, current project, or user's assigned project
       const projectId = router.query.id || project?.projectId || user?.projectId;
@@ -292,114 +309,86 @@ export default function EditContent() {
         throw new Error('No project ID available');
       }
       
-      console.log('[Text Save] Saving project with ID:', projectId);
-      console.log('[Text Save] Form data keys:', Object.keys(formData).length);
+      console.log('[Save] Starting save process for project:', projectId);
       
-      // Convert form data back to content array
-      // This is critical - we need valid key/value pairs for all content
-      if (!formData || typeof formData !== 'object' || Object.keys(formData).length === 0) {
-        console.error('[Text Save] formData is invalid:', formData);
-        throw new Error('Form data is empty or invalid. Cannot save.');
-      }
+      // Separate metadata from content
+      const metadataFields = ['name', 'settings'];
+      const contentFields = Object.keys(formData).filter(key => !metadataFields.includes(key));
       
-      const content = Object.entries(formData)
-        .filter(([key, value]) => key && key.trim() !== '') // Filter out empty keys
-        .map(([key, value]) => ({ 
-          key, 
-          value: (value === undefined || value === null) ? '' : String(value) // Ensure value is a valid string
-        }));
+      // 1. First save metadata if needed
+      const metadataToUpdate = {};
+      metadataFields.forEach(field => {
+        if (formData[field] !== undefined) {
+          metadataToUpdate[field] = formData[field];
+        }
+      });
       
-      console.log('[Text Save] Content array to save, length:', content.length);
-      if (content.length > 0) {
-        console.log('[Text Save] Sample items:', JSON.stringify(content.slice(0, 3)));
-      }
-      
-      // Validate that we have content to save
-      if (!content || content.length === 0) {
-        throw new Error('No content to save. Form data may be empty.');
-      }
-      
-      // Important: Ensure we're not losing any fields from the original content
-      if (project?.content && Array.isArray(project.content) && 
-          project.content.length > 0 && content.length < project.content.length) {
-        console.warn(`[Text Save] Warning: Original content had ${project.content.length} items but new content only has ${content.length} items`);
-      }
-      
-      // Send update to API with proper error handling
-      console.log(`[Text Save] Sending PUT request to /api/projects/${projectId}`);
-      console.log('[Text Save] Content being sent to server:', JSON.stringify(content.slice(0, 5)) + '... (truncated)');
-      
-      // Create the complete payload object
-      const payload = { content };
-      
-      // Verify payload before sending
-      if (!payload.content || !Array.isArray(payload.content) || payload.content.length === 0) {
-        throw new Error('Invalid content payload created');
-      }
-      
-      console.log(`[Text Save] Payload has content array with ${payload.content.length} items`);
-      
-      let res;
-      try {
-        // Validate payload size
-        const payloadString = JSON.stringify(payload);
-        console.log(`[Text Save] Payload size: ${payloadString.length} characters`);
-        
-        // Log the actual request we're about to send
-        console.log(`[Text Save] Request URL: /api/projects/${projectId}/content`);
-        console.log('[Text Save] Request method: PUT');
-        console.log('[Text Save] Request headers:', {
-          'Content-Type': 'application/json'
-        });
-        
-        res = await fetch(`/api/projects/${projectId}/content`, {
+      if (Object.keys(metadataToUpdate).length > 0) {
+        console.log('[Save] Updating metadata:', metadataToUpdate);
+        const metadataRes = await fetch(`/api/projects/${projectId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest', // Help identify AJAX requests
-            'Cache-Control': 'no-cache', // Prevent caching
-            'Pragma': 'no-cache'
           },
-          body: payloadString,
-          credentials: 'include' // Include cookies for authentication
+          body: JSON.stringify(metadataToUpdate),
+          credentials: 'include'
         });
-      } catch (fetchError) {
-        console.error('[Text Save] Network error during fetch:', fetchError);
-        throw new Error(`Network error: ${fetchError.message}`);
-      }
-
-      console.log('[Text Save] Response status:', res.status);
-      
-      // Get the response text for better debugging
-      let responseText;
-      try {
-        responseText = await res.text();
-        console.log('[Text Save] Response text:', responseText);
-      } catch (textError) {
-        console.error('[Text Save] Error getting response text:', textError);
-        responseText = 'Could not read response text';
+        
+        if (!metadataRes.ok) {
+          const errorText = await metadataRes.text();
+          throw new Error(`Failed to update metadata: ${errorText}`);
+        }
+        console.log('[Save] Metadata updated successfully');
       }
       
-      if (!res.ok) {
-        throw new Error(`Failed to update project: Status ${res.status} - ${responseText}`);
-      }
-
-      let responseData;
-      try {
-        // Parse the JSON if possible
-        responseData = JSON.parse(responseText);
-        console.log('[Text Save] Save response:', responseData);
-      } catch (jsonError) {
-        console.warn('[Text Save] Could not parse response as JSON:', jsonError);
+      // 2. Then save content
+      console.log('[Save] Preparing content for save');
+      const content = contentFields
+        .filter(key => key && key.trim() !== '')
+        .map(key => ({
+          key,
+          value: String(formData[key] || '')
+        }));
+      
+      if (content.length > 0) {
+        console.log(`[Save] Saving ${content.length} content items`);
+        const contentRes = await fetch(`/api/projects/${projectId}/content`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ content }),
+          credentials: 'include'
+        });
+        
+        if (!contentRes.ok) {
+          const errorText = await contentRes.text();
+          throw new Error(`Failed to update content: ${errorText}`);
+        }
+        console.log('[Save] Content updated successfully');
+      } else {
+        console.log('[Save] No content to save');
       }
       
-      // Set save as successful
+      // 3. Update local state with the saved data
+      const updatedProject = { ...project };
+      if (Object.keys(metadataToUpdate).length > 0) {
+        Object.assign(updatedProject, metadataToUpdate);
+      }
+      
+      setProject(updatedProject);
       setSaveSuccess(true);
       
-      // Update our local state with the saved content values
-      console.log('[Text Save] Updating local state with saved content');
+      // Hide success message after 3 seconds
+      setTimeout(() => setSaveSuccess(false), 3000);
       
-      // Don't refetch immediately after save - it could cause race conditions
+    } catch (err) {
+      console.error('Error saving project:', err);
+      setError(`Failed to save changes: ${err.message}`);
+    } finally {
+      setSaving(false);
+    }
+  }
       // Instead, update the project object with our successfully saved content
       if (project) {
         const updatedProject = {
@@ -447,11 +436,7 @@ export default function EditContent() {
       // Show success message but don't redirect anywhere
       // We want users to stay on the edit page to keep making changes
     } catch (err) {
-      console.error('[Text Save] Error updating project:', err);
-      // Provide more detailed error information
-      setError(`Failed to save changes: ${err.message}. Please try again or contact support if the problem persists.`);
-      
-      // Log additional debugging information
+      // Error handling is now done in the catch block of handleSubmit
       console.error('[Text Save] Error details:', {
         formDataSize: formData ? Object.keys(formData).length : 'undefined',
         projectId,
