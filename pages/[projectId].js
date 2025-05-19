@@ -8,7 +8,7 @@ import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin, FaQuoteLeft } from 'rea
 
 export default function ClientSite({ projectData, notFound }) {
   const router = useRouter();
-  const [lastUpdated, setLastUpdated] = useState(Date.now());
+  // Removed dynamic timestamp state to prevent unnecessary refreshes
   const didMountRef = useRef(false);
   
   // Handle case where project is not found
@@ -1200,62 +1200,29 @@ export default function ClientSite({ projectData, notFound }) {
     }
   };
 
-  // Force client to reload the page if data is stale
+  // Removed automatic page refresh mechanism to prevent unnecessary refreshes
   useEffect(() => {
     if (didMountRef.current) {
       return; // Skip after initial render
     }
     didMountRef.current = true;
     
-    // If we detect we're getting stale data, force a hard refresh
-    const checkForUpdates = async () => {
-      // Wait a moment after page loads to check for fresh data
-      await new Promise(resolve => setTimeout(resolve, 5000));
-      
-      try {
-        // Add cache busting parameter
-        const fetchUrl = `${window.location.pathname}?nocache=${Date.now()}`;
-        const response = await fetch(fetchUrl, {
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-          }
-        });
-        
-        if (response.ok) {
-          // Force the page to reload with cache busting
-          setLastUpdated(Date.now());
-          window.location = `${window.location.pathname}?t=${Date.now()}`;
-        }
-      } catch (error) {
-        console.error('Error checking for updates:', error);
-      }
-    };
-    
-    checkForUpdates();
-    
-    // Set up periodic check
-    const interval = setInterval(() => {
-      setLastUpdated(Date.now());
-    }, 30000); // Update timestamp every 30 seconds
-    
-    return () => clearInterval(interval);
+    // We now rely on the revalidation API instead of client-side refreshes
+    // No automatic refreshes - user must explicitly save changes in dashboard to trigger revalidation
   }, []);
 
   return (
     <>
       <Head>
         <title>{getContentValue('rendered_title', 'Personal Brand Site')}</title>
-        <meta name="description" content={getContentValue('rendered_subtitle', 'Welcome to my site')} />
+        <meta name="description" content={getContentValue('subtitle', getContentValue('rendered_subtitle', 'Welcome to my site'))} />
         <link rel="icon" href="/favicon.ico" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         {/* Add cache control headers to prevent browser caching */}
         <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
         <meta httpEquiv="Pragma" content="no-cache" />
         <meta httpEquiv="Expires" content="0" />
-        {/* Add a unique timestamp query parameter to force fresh content */}
-        <meta name="timestamp" content={lastUpdated.toString()} />
+        {/* Removed dynamic timestamp meta tag to prevent unnecessary refreshes */}
         <style dangerouslySetInnerHTML={{ __html: styles }} />
       </Head>
 
@@ -1268,7 +1235,7 @@ export default function ClientSite({ projectData, notFound }) {
                 <div className="profile-section lazy-load">
                   <div className="profile-text">
                     <h1 className="header-title">{getContentValue('rendered_title', 'Personal Brand Site')}</h1>
-                    <p className="header-subtitle">{getContentValue('rendered_subtitle', 'Welcome to my site')}</p>
+                    <p className="header-subtitle">{getContentValue('subtitle', getContentValue('rendered_subtitle', 'Welcome to my site'))}</p>
                   </div>
                   <div className="profile-image-container">
                     <img 
