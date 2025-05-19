@@ -49,7 +49,8 @@ export default function EditContent() {
         console.log('Fetching project with ID:', projectId);
         
         // Fetch the specific project by ID
-        const res = await fetch(`/api/projects/${projectId}`);
+        // Use the content endpoint to avoid the route conflict
+        const res = await fetch(`/api/projects/${projectId}/content`);
         
         if (!res.ok) {
           throw new Error('Failed to fetch project');
@@ -345,13 +346,13 @@ export default function EditContent() {
         console.log(`[Text Save] Payload size: ${payloadString.length} characters`);
         
         // Log the actual request we're about to send
-        console.log(`[Text Save] Request URL: /api/projects/${projectId}`);
+        console.log(`[Text Save] Request URL: /api/projects/${projectId}/content`);
         console.log('[Text Save] Request method: PUT');
         console.log('[Text Save] Request headers:', {
           'Content-Type': 'application/json'
         });
         
-        res = await fetch(`/api/projects/${projectId}`, {
+        res = await fetch(`/api/projects/${projectId}/content`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
