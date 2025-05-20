@@ -165,11 +165,29 @@ export default function EditContent() {
     if (!file) return;
     
     // Validate file before uploading
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (!validTypes.includes(file.type)) {
+    const validTypes = [
+      'image/jpeg', 
+      'image/jpg', 
+      'image/pjpeg',
+      'image/jfif',
+      'image/png', 
+      'image/gif', 
+      'image/webp'
+    ];
+    
+    // Special handling for files with .jpg/.jpeg extension
+    let fileType = file.type;
+    if (file.name.toLowerCase().endsWith('.jpg') || file.name.toLowerCase().endsWith('.jpeg')) {
+      // Allow files with jpg/jpeg extension even if MIME type doesn't match
+      console.log(`File has .jpg/.jpeg extension but type is ${file.type}`);
+      fileType = 'image/jpeg';
+    }
+    
+    if (!validTypes.includes(fileType)) {
+      console.log(`Rejected file upload: ${file.name} (${file.type})`);
       setUploadStatus(prev => ({
         ...prev,
-        [targetField]: 'Error: Only JPG, PNG, GIF and WebP images are allowed'
+        [targetField]: `Error: Only JPG, PNG, GIF and WebP images are allowed. Got: ${file.type}`
       }));
       return;
     }
@@ -226,10 +244,10 @@ export default function EditContent() {
         throw new Error('Server response missing image URL');
       }
       
-      // Update the form data with the new image URL
+      // Update the form data with the new image URL - using absoluteUrl for better browser compatibility
       setFormData(prev => ({
         ...prev,
-        [targetField]: data.url
+        [targetField]: data.absoluteUrl || data.url // Fall back to relative URL if absolute isn't available
       }));
       
       // Update upload status with success message

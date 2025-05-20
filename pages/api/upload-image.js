@@ -186,11 +186,16 @@ export default async function handler(req, res) {
       // Continue anyway, not critical
     }
 
-    // Return success response with URL
+    // Get server base URL (for production use, add NEXT_PUBLIC_BASE_URL to env vars)
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://new-self-website-5-15-25.onrender.com';
+    const absoluteUrl = `${baseUrl}${imageUrl}`;
+    
+    // Return success response with both relative and absolute URLs
     const response = {
       success: true,
       fileId: fileId,
       url: imageUrl,
+      absoluteUrl: absoluteUrl,
       filename: filename,
       type: file.mimetype,
       size: file.size
