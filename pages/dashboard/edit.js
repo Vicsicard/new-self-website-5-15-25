@@ -51,6 +51,7 @@ export default function EditContent() {
   const [selectedPaletteIndex, setSelectedPaletteIndex] = useState(null);
   const [colorSaved, setColorSaved] = useState(false);
   const [lastSavedColor, setLastSavedColor] = useState('');
+  const [uploadStatus, setUploadStatus] = useState({});
   // New state variables for content fingerprinting
   const [originalContentFingerprint, setOriginalContentFingerprint] = useState('');
   const [lastRevalidatedFingerprint, setLastRevalidatedFingerprint] = useState('');
@@ -155,6 +156,63 @@ export default function EditContent() {
     // Check if this is a color field change and save it immediately 
     if (name.includes('color')) {
       saveColorChange(name, value);
+    }
+  };
+  
+  // Handle file uploads
+  const handleFileUpload = async (e, targetField) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Update upload status
+    setUploadStatus(prev => ({
+      ...prev,
+      [targetField]: 'Uploading...'
+    }));
+    
+    try {
+      // Create form data
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      // Upload the file
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+      
+      const data = await response.json();
+      
+      // Update the form data with the new image URL
+      setFormData(prev => ({
+        ...prev,
+        [targetField]: data.url
+      }));
+      
+      // Update upload status
+      setUploadStatus(prev => ({
+        ...prev,
+        [targetField]: 'Upload complete!'
+      }));
+      
+      // Clear status after 3 seconds
+      setTimeout(() => {
+        setUploadStatus(prev => ({
+          ...prev,
+          [targetField]: ''
+        }));
+      }, 3000);
+      
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      setUploadStatus(prev => ({
+        ...prev,
+        [targetField]: 'Upload failed: ' + error.message
+      }));
     }
   };
   
@@ -616,25 +674,235 @@ export default function EditContent() {
               />
             </div>
             
-            {/* Profile Image URL */}
+            {/* Profile Image Upload/URL */}
             <div className="mb-4">
               <label className="block font-medium text-gray-700 mb-1" htmlFor="profile_image_url">
-                Profile Image URL
+                Profile Image
               </label>
-              <input
-                type="text"
-                id="profile_image_url"
-                name="profile_image_url"
-                value={formData.profile_image_url || ''}
-                onChange={handleChange}
-                placeholder="https://example.com/image.jpg"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
+              
+              {/* File Upload */}
+              <div className="mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Upload Image
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileUpload(e, 'profile_image_url')}
+                  className="block w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-md file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-blue-50 file:text-blue-700
+                    hover:file:bg-blue-100"
+                />
+                {uploadStatus.profile_image_url && (
+                  <p className="mt-1 text-xs text-gray-500">{uploadStatus.profile_image_url}</p>
+                )}
+              </div>
+              
+              {/* URL Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Or Enter Image URL
+                </label>
+                <input
+                  type="text"
+                  id="profile_image_url"
+                  name="profile_image_url"
+                  value={formData.profile_image_url || ''}
+                  onChange={handleChange}
+                  placeholder="https://example.com/image.jpg"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              
+              {/* Image Preview */}
               {formData.profile_image_url && (
-                <div className="mt-2">
+                <div className="mt-3">
                   <img
                     src={formData.profile_image_url}
                     alt="Profile Image Preview"
+                    className="mt-2 h-32 w-auto rounded-md object-cover border border-gray-200"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = '/images/placeholder.png'; // Local fallback image
+                    }}
+                  />
+                  <p className="mt-1 text-xs text-gray-500">Image preview</p>
+                </div>
+              )}
+            </div>
+            
+            {/* Banner Image 1 Upload/URL */}
+            <div className="mb-4">
+              <label className="block font-medium text-gray-700 mb-1" htmlFor="banner_1_image_url">
+                Banner Image 1
+              </label>
+              
+              {/* File Upload */}
+              <div className="mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Upload Image
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileUpload(e, 'banner_1_image_url')}
+                  className="block w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-md file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-blue-50 file:text-blue-700
+                    hover:file:bg-blue-100"
+                />
+                {uploadStatus.banner_1_image_url && (
+                  <p className="mt-1 text-xs text-gray-500">{uploadStatus.banner_1_image_url}</p>
+                )}
+              </div>
+              
+              {/* URL Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Or Enter Image URL
+                </label>
+                <input
+                  type="text"
+                  id="banner_1_image_url"
+                  name="banner_1_image_url"
+                  value={formData.banner_1_image_url || ''}
+                  onChange={handleChange}
+                  placeholder="https://example.com/banner1.jpg"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              
+              {/* Image Preview */}
+              {formData.banner_1_image_url && (
+                <div className="mt-3">
+                  <img
+                    src={formData.banner_1_image_url}
+                    alt="Banner Image 1 Preview"
+                    className="mt-2 h-32 w-auto rounded-md object-cover border border-gray-200"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = '/images/placeholder.png'; // Local fallback image
+                    }}
+                  />
+                  <p className="mt-1 text-xs text-gray-500">Image preview</p>
+                </div>
+              )}
+            </div>
+            
+            {/* Banner Image 2 Upload/URL */}
+            <div className="mb-4">
+              <label className="block font-medium text-gray-700 mb-1" htmlFor="banner_2_image_url">
+                Banner Image 2
+              </label>
+              
+              {/* File Upload */}
+              <div className="mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Upload Image
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileUpload(e, 'banner_2_image_url')}
+                  className="block w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-md file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-blue-50 file:text-blue-700
+                    hover:file:bg-blue-100"
+                />
+                {uploadStatus.banner_2_image_url && (
+                  <p className="mt-1 text-xs text-gray-500">{uploadStatus.banner_2_image_url}</p>
+                )}
+              </div>
+              
+              {/* URL Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Or Enter Image URL
+                </label>
+                <input
+                  type="text"
+                  id="banner_2_image_url"
+                  name="banner_2_image_url"
+                  value={formData.banner_2_image_url || ''}
+                  onChange={handleChange}
+                  placeholder="https://example.com/banner2.jpg"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              
+              {/* Image Preview */}
+              {formData.banner_2_image_url && (
+                <div className="mt-3">
+                  <img
+                    src={formData.banner_2_image_url}
+                    alt="Banner Image 2 Preview"
+                    className="mt-2 h-32 w-auto rounded-md object-cover border border-gray-200"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = '/images/placeholder.png'; // Local fallback image
+                    }}
+                  />
+                  <p className="mt-1 text-xs text-gray-500">Image preview</p>
+                </div>
+              )}
+            </div>
+            
+            {/* Banner Image 3 Upload/URL */}
+            <div className="mb-4">
+              <label className="block font-medium text-gray-700 mb-1" htmlFor="banner_3_image_url">
+                Banner Image 3
+              </label>
+              
+              {/* File Upload */}
+              <div className="mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Upload Image
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileUpload(e, 'banner_3_image_url')}
+                  className="block w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-md file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-blue-50 file:text-blue-700
+                    hover:file:bg-blue-100"
+                />
+                {uploadStatus.banner_3_image_url && (
+                  <p className="mt-1 text-xs text-gray-500">{uploadStatus.banner_3_image_url}</p>
+                )}
+              </div>
+              
+              {/* URL Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Or Enter Image URL
+                </label>
+                <input
+                  type="text"
+                  id="banner_3_image_url"
+                  name="banner_3_image_url"
+                  value={formData.banner_3_image_url || ''}
+                  onChange={handleChange}
+                  placeholder="https://example.com/banner3.jpg"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              
+              {/* Image Preview */}
+              {formData.banner_3_image_url && (
+                <div className="mt-3">
+                  <img
+                    src={formData.banner_3_image_url}
+                    alt="Banner Image 3 Preview"
                     className="mt-2 h-32 w-auto rounded-md object-cover border border-gray-200"
                     onError={(e) => {
                       e.target.onerror = null;

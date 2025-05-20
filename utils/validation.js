@@ -71,6 +71,18 @@ export function validateContentForm(formData) {
     errors.profile_image_url = 'Invalid URL format';
   }
   
+  if (formData.banner_1_image_url && !isValidUrl(formData.banner_1_image_url)) {
+    errors.banner_1_image_url = 'Invalid URL format';
+  }
+  
+  if (formData.banner_2_image_url && !isValidUrl(formData.banner_2_image_url)) {
+    errors.banner_2_image_url = 'Invalid URL format';
+  }
+  
+  if (formData.banner_3_image_url && !isValidUrl(formData.banner_3_image_url)) {
+    errors.banner_3_image_url = 'Invalid URL format';
+  }
+  
   if (formData.client_website && !isValidUrl(formData.client_website)) {
     errors.client_website = 'Invalid URL format';
   }
