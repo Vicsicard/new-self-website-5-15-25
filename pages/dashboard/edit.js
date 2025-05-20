@@ -191,10 +191,10 @@ export default function EditContent() {
     }));
     
     try {
-      // Create form data - use the same field name regardless of targetField
-      // The backend will extract the first file found
+      // Create form data with field name expected by the backend
+      // The field name must be 'image' to match backend expectations
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('image', file);
       
       console.log(`Uploading ${file.name} (${file.size} bytes) for field ${targetField}`);
       
