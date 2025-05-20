@@ -24,17 +24,32 @@ const parseFormData = (req) => {
     maxFileSize: 5 * 1024 * 1024, // 5MB limit
     keepExtensions: true,
     multiples: false,
+    uploadDir: '/tmp' // Use temp directory for serverless environment
   };
   
   return new Promise((resolve, reject) => {
     const form = new IncomingForm(options);
+    
+    // Handle file specifically
+    let uploadedFile = null;
+    
+    form.on('file', (field, file) => {
+      console.log('Received file:', { field, name: file.originalFilename, size: file.size, type: file.mimetype });
+      uploadedFile = file;
+    });
     
     form.parse(req, (err, fields, files) => {
       if (err) {
         console.error('Form parsing error:', err);
         return reject(err);
       }
-      resolve({ fields, files });
+      
+      // Pass both the parsed files and our specifically handled file
+      resolve({ 
+        fields, 
+        files, 
+        uploadedFile 
+      });
     });
   });
 };
@@ -53,20 +68,19 @@ export default async function handler(req, res) {
   try {
     console.log('Processing image upload request');
     
-    // Parse the multipart form data
-    const { fields, files } = await parseFormData(req);
-    console.log('Form parsed, files received:', Object.keys(files));
+    // Parse the multipart form data with our enhanced method
+    const { fields, files, uploadedFile } = await parseFormData(req);
+    console.log('Form parsed, files:', Object.keys(files));
     
-    // Get the first file regardless of field name
-    const fileKey = Object.keys(files)[0];
-    const file = files[fileKey];
+    // Use the directly captured file object which preserves all properties
+    const file = uploadedFile;
     
     if (!file) {
-      console.error('No file found in request');
-      return res.status(400).json({ error: 'No file uploaded' });
+      console.error('No valid file found in request');
+      return res.status(400).json({ error: 'No file uploaded or invalid file format' });
     }
     
-    console.log('File details:', { 
+    console.log('Using file:', { 
       name: file.originalFilename, 
       type: file.mimetype, 
       size: file.size,
@@ -74,10 +88,34 @@ export default async function handler(req, res) {
     });
     
     // Validate file type
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (!validTypes.includes(file.mimetype)) {
-      console.error('Invalid file type:', file.mimetype);
-      return res.status(400).json({ error: 'Invalid file type. Only images are allowed.' });
+    // Include various JPEG format types including JFIF
+    const validTypes = [
+      'image/jpeg', 
+      'image/jpg', 
+      'image/pjpeg', 
+      'image/jfif', 
+      'image/png', 
+      'image/gif', 
+      'image/webp'
+    ];
+    
+    console.log('File MIME type:', file.mimetype);
+    
+    // Handle special cases for JFIF
+    let fileType = file.mimetype;
+    if (file.originalFilename?.toLowerCase().endsWith('.jpg') || 
+        file.originalFilename?.toLowerCase().endsWith('.jpeg')) {
+      // Force accept the file if it has jpg/jpeg extension regardless of mimetype
+      console.log('Accepting file based on .jpg/.jpeg extension');
+      fileType = 'image/jpeg';
+    }
+    
+    if (!validTypes.includes(fileType)) {
+      console.error('Invalid file type:', fileType, 'Filename:', file.originalFilename);
+      return res.status(400).json({ 
+        error: 'Invalid file type. Only JPG, PNG, GIF and WebP images are allowed.',
+        receivedType: fileType
+      });
     }
 
     // Read file into buffer first (more reliable in serverless environments)
