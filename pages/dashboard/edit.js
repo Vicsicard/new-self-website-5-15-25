@@ -164,28 +164,67 @@ export default function EditContent() {
     const file = e.target.files[0];
     if (!file) return;
     
+    // Validate file before uploading
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setUploadStatus(prev => ({
+        ...prev,
+        [targetField]: 'Error: Only JPG, PNG, GIF and WebP images are allowed'
+      }));
+      return;
+    }
+    
+    // File size validation (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      setUploadStatus(prev => ({
+        ...prev,
+        [targetField]: 'Error: File size exceeds 5MB limit'
+      }));
+      return;
+    }
+    
     // Update upload status
     setUploadStatus(prev => ({
       ...prev,
-      [targetField]: 'Uploading...'
+      [targetField]: `Uploading ${file.name}...`
     }));
     
     try {
-      // Create form data
+      // Create form data - use the same field name regardless of targetField
+      // The backend will extract the first file found
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append('file', file);
       
-      // Upload the file
+      console.log(`Uploading ${file.name} (${file.size} bytes) for field ${targetField}`);
+      
+      // Upload the file with proper error handling
       const response = await fetch('/api/upload-image', {
         method: 'POST',
         body: formData
       });
       
+      // Handle HTTP errors
       if (!response.ok) {
-        throw new Error('Upload failed');
+        let errorMessage = 'Upload failed';
+        try {
+          // Try to get error details from response
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch (parseError) {
+          // If can't parse JSON, use status text
+          errorMessage = `Upload failed: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
       
+      // Parse successful response
       const data = await response.json();
+      console.log('Upload successful:', data);
+      
+      if (!data.url) {
+        throw new Error('Server response missing image URL');
+      }
       
       // Update the form data with the new image URL
       setFormData(prev => ({
@@ -193,10 +232,10 @@ export default function EditContent() {
         [targetField]: data.url
       }));
       
-      // Update upload status
+      // Update upload status with success message
       setUploadStatus(prev => ({
         ...prev,
-        [targetField]: 'Upload complete!'
+        [targetField]: `Upload complete! (${(file.size / 1024).toFixed(1)}KB)`
       }));
       
       // Clear status after 3 seconds
@@ -208,11 +247,19 @@ export default function EditContent() {
       }, 3000);
       
     } catch (error) {
-      console.error('Error uploading file:', error);
+      console.error(`Error uploading file for ${targetField}:`, error);
       setUploadStatus(prev => ({
         ...prev,
-        [targetField]: 'Upload failed: ' + error.message
+        [targetField]: `Upload failed: ${error.message}`
       }));
+      
+      // Keep error showing longer
+      setTimeout(() => {
+        setUploadStatus(prev => ({
+          ...prev,
+          [targetField]: ''
+        }));
+      }, 5000);
     }
   };
   
