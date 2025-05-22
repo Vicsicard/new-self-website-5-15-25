@@ -2,8 +2,9 @@ import { useContext } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { AuthContext } from '../../pages/_app';
+import { FaSave, FaEye, FaInfoCircle } from 'react-icons/fa';
 
-export default function DashboardLayout({ children }) {
+export default function DashboardLayout({ children, onSave }) {
   const { user, logout } = useContext(AuthContext);
   const router = useRouter();
 
@@ -66,6 +67,33 @@ export default function DashboardLayout({ children }) {
                   Preview Site
                 </a>
               </Link>
+              
+              {/* Save Changes Button - Only show on edit page */}
+              {router.pathname === '/dashboard/edit' && (
+                <div className="mt-8">
+                  <div className="bg-yellow-50 p-3 rounded-md mb-3 border border-yellow-200">
+                    <div className="flex items-start">
+                      <FaInfoCircle className="text-yellow-500 mt-1 mr-2 flex-shrink-0" />
+                      <p className="text-sm text-yellow-700">
+                        Remember to save your changes before previewing your site.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={onSave}
+                    className="w-full flex items-center justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                  >
+                    <FaSave className="mr-2" />
+                    Save Changes
+                  </button>
+                  <Link href="/dashboard/preview" legacyBehavior>
+                    <a className="mt-2 w-full flex items-center justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                      <FaEye className="mr-2" />
+                      View Site
+                    </a>
+                  </Link>
+                </div>
+              )}
             </nav>
           </div>
         </div>

@@ -3,7 +3,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import DashboardLayout from '../../components/dashboard/Layout';
 import { AuthContext } from '../_app';
-import { FaLightbulb, FaCheck } from 'react-icons/fa';
+import { FaLightbulb, FaCheck, FaInfoCircle } from 'react-icons/fa';
 
 // Simple content fingerprinting function
 function generateContentFingerprint(formData) {
@@ -2754,7 +2754,7 @@ export default function EditContent() {
   };
 
   return (
-    <DashboardLayout>
+    <DashboardLayout onSave={handleSubmit}>
       <Head>
         <title>Edit Content | Self Cast Studios</title>
       </Head>
@@ -2764,6 +2764,17 @@ export default function EditContent() {
         
         {project ? (
           <form onSubmit={handleSubmit}>
+            {/* Important note about saving changes */}
+            <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start">
+              <FaInfoCircle className="text-blue-500 mt-1 mr-3 flex-shrink-0" />
+              <div>
+                <h3 className="font-semibold text-blue-800">Important Note:</h3>
+                <p className="text-blue-700">
+                  Changes made here will not appear on your website until you click the <strong>Save Changes</strong> button. 
+                  After saving, you can view your updated site using the <strong>View Site</strong> button.
+                </p>
+              </div>
+            </div>
             {/* Success message */}
             {saveSuccess && (
               <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-6">
