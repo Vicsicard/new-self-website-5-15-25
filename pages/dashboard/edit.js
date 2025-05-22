@@ -446,8 +446,8 @@ export default function EditContent() {
       
       setWebsiteCreated(true);
       
-      // Open the website in a new tab
-      window.open(`/${projectId}`, '_blank');
+      // Open the website in a new tab using the public URL with custom domain
+      window.open(`${process.env.NEXT_PUBLIC_CLIENT_DOMAIN || 'https://clients.selfcaststudios.com'}/${projectId}`, '_blank');
     } catch (err) {
       console.error('Error creating website:', err);
       setError(`Failed to create website: ${err.message}`);

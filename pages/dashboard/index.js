@@ -134,26 +134,13 @@ export default function Dashboard() {
               <p className="text-gray-700 mt-1">
                 Public URL:{' '}
                 <a
-                  href={`${process.env.NEXT_PUBLIC_CLIENT_DOMAIN || 'https://selfcaststudios.com'}/${project.projectId}`}
+                  href={`${process.env.NEXT_PUBLIC_CLIENT_DOMAIN || 'https://clients.selfcaststudios.com'}/${project.projectId}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:underline"
                 >
-                  {process.env.NEXT_PUBLIC_CLIENT_DOMAIN || 'https://selfcaststudios.com'}/{project.projectId}
+                  {process.env.NEXT_PUBLIC_CLIENT_DOMAIN || 'https://clients.selfcaststudios.com'}/{project.projectId}
                 </a>
-              </p>
-              {/* Direct local preview link */}
-              <p className="text-gray-700 mt-1">
-                Local Preview:{' '}
-                <a
-                  href={`/${project.projectId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-green-600 hover:underline"
-                >
-                  /{project.projectId}
-                </a>
-                {' '}(for testing)
               </p>
               <p className="text-gray-700 mt-1">
                 Last Updated: <span className="font-medium">{new Date(project.updatedAt).toLocaleString()}</span>
